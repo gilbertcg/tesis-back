@@ -1,9 +1,16 @@
 const passport = require('passport');
 const mongoose = require('mongoose');
+const axios = require('axios');
 
 const errorFormat = require('../../functions/errorCode');
 
 const Clients = mongoose.model('Clients');
+
+// Configura tu API key de OpenAI
+const apiKey = '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';
+
+// URL de la API de ChatGPT
+const apiUrl = 'https://api.openai.com/v1/engines/davinci-codex/completions';
 
 const login = async (req, res) => {
   if (!req.body.email) return res.status(422).json(errorFormat.set(422, 'Fill you email'));
@@ -61,9 +68,37 @@ const update = (req, res) => {
   });
 };
 
-const processText = (req, res) => {
-  return res.status(200).json({ text: 'texto' });
+const processText = async (req, res) => {
+  try {
+    const response = await chatGPT(req.body.text);
+    return res.status(200).json({ text: response });
+  } catch (error) {
+    return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+  }
 };
+
+async function chatGPT(text) {
+  try {
+    const response = await axios.post(
+      apiUrl,
+      {
+        prompt: text,
+        max_tokens: 50, // Ajusta esto según tus necesidades
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+      },
+    );
+
+    return response.data.choices[0].text;
+  } catch (error) {
+    console.error('Error al llamar a la API de ChatGPT:', error);
+    throw error;
+  }
+}
 
 module.exports = {
   login,
