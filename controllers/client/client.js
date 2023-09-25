@@ -67,7 +67,18 @@ const update = (req, res) => {
 
 const processText = async (req, res) => {
   try {
-    const response = await chatGPT(req.body.text);
+    const prompt = `Hola, a continuacion te voy a dar el siguiente texto: 
+    
+    ${req.body.text}
+
+    El texto anterior es mensaje de correo electronico que se quiere enviar, pero quiero que lo veas y le des un aspecto mas profesional y amigable a ese texto, 
+
+    tambien quiero que le des una estructura html amigable con css inline, ya que es un correo electronico en caso de ser necesario,
+
+    De resultado quiero que solamente me respondas el texto plano del correo electronico que voy a enviar, no quiero que digas mas nada.
+    
+    `;
+    const response = await chatGPT(prompt);
     return res.status(200).json({ text: response });
   } catch (error) {
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
@@ -87,7 +98,6 @@ const chatGPT = prompt =>
           body: JSON.stringify({
             model: 'gpt-3.5-turbo',
             messages: [{ role: 'user', content: prompt }],
-            // max_tokens: 5,
           }),
         },
         async (err, resp, body) => {
