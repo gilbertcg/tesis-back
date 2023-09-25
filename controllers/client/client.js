@@ -84,10 +84,10 @@ const chatGPT = prompt =>
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiKey}`,
           },
-          body: {
+          body: JSON.stringify({
             prompt: prompt,
             max_tokens: 5,
-          },
+          }),
         },
         async (err, resp, body) => {
           if (err) {
@@ -99,7 +99,7 @@ const chatGPT = prompt =>
         },
       );
     } catch (error) {
-      return resolve([]);
+      return resolve(null);
     }
   });
 
