@@ -7,7 +7,7 @@ const errorFormat = require('../../functions/errorCode');
 const Clients = mongoose.model('Clients');
 
 // Configura tu API key de OpenAI
-const apiKey = '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';
+const apiKey = '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';
 
 const login = async (req, res) => {
   if (!req.body.email) return res.status(422).json(errorFormat.set(422, 'Fill you email'));
