@@ -6,10 +6,21 @@ const mongoose = require('mongoose');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
-const serviceAccount = require('./config/serviceAccountKey.json');
 
+const certs = {
+  key: '',
+  cert: '',
+};
+
+try {
+  if (process.env.KEYPATH && process.env.CERTPATH) {
+    certs.key = fs.readFileSync(process.env.KEYPATH, 'utf8');
+    certs.cert = fs.readFileSync(process.env.CERTPATH, 'utf8');
+  }
+} catch (err) {
+  if (err.code !== 'ENOENT') throw err;
+}
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -53,7 +64,6 @@ require('./config/passport');
 mongoose.connection.once('open', () => {
   app.emit('ready');
 });
-
 
 // Routes
 app.use(require('./routes'));
@@ -101,4 +111,3 @@ app.on('ready', () => {
     console.log(`Listening on port ${server.address().port}`);
   });
 });
-

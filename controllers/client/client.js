@@ -2,7 +2,6 @@ const passport = require('passport');
 const mongoose = require('mongoose');
 
 const errorFormat = require('../../functions/errorCode');
-const emails = require('../../functions/emails');
 
 const Clients = mongoose.model('Clients');
 
@@ -34,72 +33,7 @@ const register = (req, res) => {
     user.verification = Math.random().toString(36).substring(7) + req.body.email;
     user.save((error, data) => {
       if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-      const url = `${process.env.URL_WEB}/verification/${emails.encrypt(user.verification)}`;
-      console.log(url);
-      emails.SendEmail('verification', data.email, {
-        url: url,
-      });
       return res.json(data.toAuthJSON());
-    });
-  });
-};
-
-const verification = (req, res) => {
-  Clients.findOne({ verification: emails.decrypt(req.params.id) }).exec((error, user) => {
-    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-    if (!user) return res.status(400).json(errorFormat.set(401, 'Invalid code'));
-    user.verified = true;
-    user.verification = null;
-    user.save((error, data) => {
-      if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-      return res.json(data.toAuthJSON());
-    });
-  });
-};
-
-const resendVerification = (req, res) => {
-  Clients.findOne({ _id: req.payload.id }).exec((error, user) => {
-    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-    if (!user) return res.status(400).json(errorFormat.set(401, 'Invalid email'));
-    user.verification = Math.random().toString(36).substring(7) + user.email;
-    user.save((error, data) => {
-      if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-      const url = `${process.env.URL_WEB}/verification/${emails.encrypt(user.verification)}`;
-      console.log(url);
-      emails.SendEmail('verification', data.email, {
-        url: url,
-      });
-      return res.json({});
-    });
-  });
-};
-
-const forgotPassword = (req, res) => {
-  Clients.findOne({ email: req.body.email }).exec((error, client) => {
-    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-    if (!client) return res.json({});
-    client.resetPassword = Math.random().toString(36).substring(7) + req.body.email;
-    client.save((error, data) => {
-      if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-      const url = `${process.env.URL_WEB}/reset-password/${emails.encrypt(client.resetPassword)}`;
-      console.log(url);
-      emails.SendEmail('reset-password', data.email, {
-        url: url,
-      });
-      return res.json({});
-    });
-  });
-};
-
-const resetPassword = (req, res) => {
-  Clients.findOne({ resetPassword: emails.decrypt(req.body.key) }).exec((error, client) => {
-    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-    if (!client) return res.status(400).json(errorFormat.set(401, 'Invalid code'));
-    client.setPassword(req.body.password);
-    client.resetPassword = null;
-    client.save(error => {
-      if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-      return res.json({});
     });
   });
 };
@@ -127,13 +61,14 @@ const update = (req, res) => {
   });
 };
 
+const processText = (req, res) => {
+  return res.status(200).json({ text: 'texto' });
+};
+
 module.exports = {
   login,
   getClient,
   update,
   register,
-  verification,
-  resendVerification,
-  resetPassword,
-  forgotPassword,
+  processText,
 };
