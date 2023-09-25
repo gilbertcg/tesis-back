@@ -79,14 +79,15 @@ const chatGPT = prompt =>
     try {
       request.post(
         {
-          url: 'https://api.openai.com/v1/engines/davinci-codex/completions',
+          url: 'https://api.openai.com/v1/chat/completions',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            prompt: prompt,
-            max_tokens: 5,
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: prompt }],
+            // max_tokens: 5,
           }),
         },
         async (err, resp, body) => {
