@@ -91,6 +91,9 @@ const processText = async (req, res) => {
 
     console.log(prompt, prompt.length);
     const response = await chatGPT(prompt);
+    if (!response) {
+      return res.status(400).json(errorFormat.set(400, 'Error in system'));
+    }
     return res.status(200).json({ text: response });
   } catch (error) {
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
@@ -122,6 +125,7 @@ const chatGPT = prompt =>
         },
       );
     } catch (error) {
+      console.log(error);
       return resolve(null);
     }
   });
