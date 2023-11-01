@@ -87,8 +87,8 @@ const processText = async (req, res) => {
     
     Tampoco quiero que te refieras al destinatario como usuario o destinatario, evita usar oraciones donde tengas que agregar eso.
 
-    No alargues los parrafos nuevos a mas del triple del parrafo original. 
-    
+    No alargues los parrafos nuevos a mas de 100 palabras por parrafo. 
+
     De resultado quiero que devuelvas el HTML como un texto plano del correo electronico que voy a enviar. 
     
     `;
