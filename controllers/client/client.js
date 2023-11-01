@@ -79,11 +79,13 @@ const processText = async (req, res) => {
 
     El codigo anterior es un mensaje de correo electronico.
 
-    Quiero que identifiques y mantengas codigo HTML de la firma del creador del correo electronico.
+    Ahora quiero que analices el mensaje escrito por el usuario y lo modifiques por un mensaje mas profesional y amigable.
+    
+    Si existe pedazos de codigo de HTML que no contengan contenido relevante para el mensaje a enviar puedes ignorar eso.
 
-    Ahora quiero que analices la parte donde esta el mensaje escrito por el usuario dentro del html y lo modifiques por un mensaje mas profesional y amigable, sin modificar el resto del HTML del correo. 
-
-    De resultado quiero que devuelvas el HTML del correo electronico que voy a enviar, manteniendo lo que fue el HTML de la firma del creador intacta.
+    No quiero que agregues texto por completar al estilo [TU_NOMBRE] o [NOMBRE_DESTINATARIO], quiero que trabajes en base solamente al mensaje escrito por el usuario.
+    
+    De resultado quiero que devuelvas el HTML como un texto plano del correo electronico que voy a enviar. 
     
     `;
 
