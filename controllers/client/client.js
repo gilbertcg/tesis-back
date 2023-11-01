@@ -7,7 +7,7 @@ const errorFormat = require('../../functions/errorCode');
 const Clients = mongoose.model('Clients');
 
 // Configura tu API key de OpenAI
-const apiKey = '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';
+const apiKey = process.env.CHATGPT_KEY;
 
 const login = async (req, res) => {
   if (!req.body.email) return res.status(422).json(errorFormat.set(422, 'Fill you email'));
@@ -93,7 +93,6 @@ const processText = async (req, res) => {
     
     `;
 
-    console.log(prompt, prompt.length);
     const response = await chatGPT(prompt);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
