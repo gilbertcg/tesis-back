@@ -66,28 +66,30 @@ const update = (req, res) => {
 };
 
 const processText = async (req, res) => {
-  if (req.body.text.lenght > 1000) {
+  if (req.body.text.lenght > 3000) {
     return res.status(400).json(errorFormat.set(400, 'text to long', ''));
   }
   try {
-    const prompt = `A continuacion te voy a dar el siguiente texto: 
+    const prompt = `
+    Ahora quiero que actues como un profesional en la comunicacion por correos electronicos y Experto en HTML y CSS,
+   
+    A continuacion te voy a dar el siguiente codigo html: 
     
     ${req.body.text}
 
-    El texto anterior es un mensaje de correo electronico.
+    El codigo anterior es un mensaje de correo electronico.
 
-    Quiero que actues como un profesional en la comunicacion por correos electronicos,
-    que lo analices y le des un aspecto mas profesional y amigable a ese texto. 
+    Quiero que identifiques en caso de que exista, el codigo HTML de la firma del correo electronico.
 
-    Si el correo tiene una firma quiero que mantengas esa firma no la modifiques.
+    Ahra quiero que analices la parte donde esta el texto escrito por el usuario y lo modifiques por un texto mas profesional y amigable. 
 
-    Si el correo posee un formato HTML, quiero que mejores ese HTML de ser necesario y si vas a agregar CSS utiliza CSS inline.
+    Si el correo tiene una firma quiero que mantengas el html de  esa firma, no la modifiques.
 
-    Si el correo posee HTML y una firma. Quiero que adaptes ese HTML al estilo que posea la firma.
-
-    De resultado quiero que solamente me respondas el correo electronico que voy a enviar, con su formato html si es necesario.
+    De resultado quiero que solamente me devuelvas el HTML del correo electronico que voy a enviar.
     
     `;
+
+    console.log(prompt);
     const response = await chatGPT(prompt);
     return res.status(200).json({ text: response });
   } catch (error) {
