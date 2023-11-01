@@ -85,6 +85,10 @@ const processText = async (req, res) => {
 
     No quiero que agregues marcadores o placeholders al mensaje modificado, como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario], [Nombre del destinatario], o cualquier campo que tenga que se llenado por el usuario.
     
+    Tampoco quiero que te refieras al destinatario como usuario o destinatario, evita usar oraciones donde tengas que agregar eso.
+
+    No alargues los parrafos nuevos a mas del triple del parrafo original. 
+    
     De resultado quiero que devuelvas el HTML como un texto plano del correo electronico que voy a enviar. 
     
     `;
