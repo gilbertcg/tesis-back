@@ -83,7 +83,7 @@ const processText = async (req, res) => {
     
     Si existe pedazos de codigo de HTML que no contengan contenido relevante para el mensaje a enviar puedes ignorar eso.
 
-    No quiero que agregues texto por completar al estilo [TU_NOMBRE] o [NOMBRE_DESTINATARIO], quiero que trabajes en base solamente al mensaje escrito por el usuario.
+    No quiero que agregues marcadores o placeholders al modificar el mensaje.
     
     De resultado quiero que devuelvas el HTML como un texto plano del correo electronico que voy a enviar. 
     
