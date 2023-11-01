@@ -83,7 +83,7 @@ const processText = async (req, res) => {
     
     Si existe pedazos de codigo de HTML que no contengan contenido relevante para el mensaje a enviar puedes ignorar eso.
 
-    No quiero que agregues marcadores o placeholders al modificar el mensaje.
+    No quiero que agregues marcadores o placeholders al mensaje modificado, como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario], [Nombre del destinatario], o cualquier campo que tenga que se llenado por el usuario.
     
     De resultado quiero que devuelvas el HTML como un texto plano del correo electronico que voy a enviar. 
     
