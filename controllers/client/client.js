@@ -89,7 +89,7 @@ const processText = async (req, res) => {
     
     `;
 
-    console.log(prompt);
+    console.log(prompt, prompt.length);
     const response = await chatGPT(prompt);
     return res.status(200).json({ text: response });
   } catch (error) {
