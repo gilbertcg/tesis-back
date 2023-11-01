@@ -66,16 +66,26 @@ const update = (req, res) => {
 };
 
 const processText = async (req, res) => {
+  if (req.body.text.lenght > 1000) {
+    return res.status(400).json(errorFormat.set(400, 'text to long', ''));
+  }
   try {
-    const prompt = `Hola, a continuacion te voy a dar el siguiente texto: 
+    const prompt = `A continuacion te voy a dar el siguiente texto: 
     
     ${req.body.text}
 
-    El texto anterior es mensaje de correo electronico que se quiere enviar, pero quiero que lo veas y le des un aspecto mas profesional y amigable a ese texto, 
+    El texto anterior es un mensaje de correo electronico.
 
-    tambien quiero que le des una estructura html amigable con css inline, ya que es un correo electronico en caso de ser necesario,
+    Quiero que actues como un profesional en la comunicacion por correos electronicos,
+    que lo analices y le des un aspecto mas profesional y amigable a ese texto. 
 
-    De resultado quiero que solamente me respondas el texto plano del correo electronico que voy a enviar, no quiero que digas mas nada.
+    Si el correo tiene una firma quiero que mantengas esa firma no la modifiques.
+
+    Si el correo posee un formato HTML, quiero que mejores ese HTML de ser necesario y si vas a agregar CSS utiliza CSS inline.
+
+    Si el correo posee HTML y una firma. Quiero que adaptes ese HTML al estilo que posea la firma.
+
+    De resultado quiero que solamente me respondas el correo electronico que voy a enviar, con su formato html si es necesario.
     
     `;
     const response = await chatGPT(prompt);
