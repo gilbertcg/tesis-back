@@ -25,6 +25,7 @@
   "name": "backend",
   "scripts": {
     "dev": "nodemon ./app.js",
+    "docker:dev": "docker run -p 3000:3000 back-tesis:latest",
     "format": "prettier --write {,*/**/}*.{ts,js,jsx,json}",
     "lint": "npm run lint:js ",
     "lint:eslint": "eslint --ignore-path .gitignore --ext .js",

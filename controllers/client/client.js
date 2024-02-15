@@ -11,17 +11,15 @@ const processText = async (req, res) => {
   }
   try {
     const prompt = `
-    Ahora quiero que actues como un profesional en la comunicacion por correos electronicos y Experto en HTML y CSS,
+    Ahora quiero que actues como un profesional en la comunicacion por correos electronicos,
    
-    A continuacion te voy a dar el siguiente codigo html: 
+    A continuacion te voy a dar el siguiente texto: 
     
     ${req.body.text}
 
     El codigo anterior es un mensaje de correo electronico.
 
     Ahora quiero que analices el mensaje escrito por el usuario y lo modifiques por un mensaje mas profesional y amigable.
-    
-    Si existe pedazos de codigo de HTML que no contengan contenido relevante para el mensaje a enviar puedes ignorar eso.
 
     No quiero que agregues marcadores o placeholders al mensaje modificado, como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario], [Nombre del destinatario], o cualquier campo que tenga que se llenado por el usuario.
     
@@ -29,7 +27,9 @@ const processText = async (req, res) => {
 
     No alargues los parrafos nuevos a mas de 100 palabras por parrafo. 
 
-    De resultado quiero que devuelvas el HTML como un texto plano del correo electronico que voy a enviar. 
+    Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
+
+    De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar. 
     
     `;
 
