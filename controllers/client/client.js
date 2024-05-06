@@ -69,12 +69,15 @@ const processText = async (req, res) => {
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
-    const template = new Templates({
-      original: req.body.text,
-      procesed: response,
-      email: req.body.email,
-    });
-    template.save();
+    if (req.body.email) {
+      const template = new Templates({
+        original: req.body.text,
+        procesed: response,
+        email: req.body.email,
+      });
+      template.save();
+    }
+
     return res.status(200).json({ text: response });
   } catch (error) {
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
