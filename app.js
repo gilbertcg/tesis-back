@@ -2,6 +2,7 @@ const express = require('express');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
@@ -37,6 +38,22 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(logger('dev'));
 
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+  })
+  .then(() => console.log('db is connected'))
+  .catch(err => console.error(err));
+mongoose.Promise = global.Promise;
+
+require('./models/Clients');
+require('./config/passport');
+
+mongoose.connection.once('open', () => {
+  app.emit('ready');
+});
+
 // Routes
 app.use(require('./routes'));
 
@@ -62,5 +79,3 @@ app.on('ready', () => {
     console.log(`Listening on port ${server.address().port}`);
   });
 });
-
-app.emit('ready');
