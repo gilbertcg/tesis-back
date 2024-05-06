@@ -48,6 +48,7 @@ mongoose
 mongoose.Promise = global.Promise;
 
 require('./models/Clients');
+require('./models/Templates');
 require('./config/passport');
 
 mongoose.connection.once('open', () => {

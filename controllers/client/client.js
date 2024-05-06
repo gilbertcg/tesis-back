@@ -8,6 +8,7 @@ const errorFormat = require('../../functions/errorCode');
 const apiKey = process.env.CHATGPT_KEY;
 
 const Clients = mongoose.model('Clients');
+const Templates = mongoose.model('Templates');
 
 const login = async (req, res) => {
   if (!req.body.email) return res.status(422).json(errorFormat.set(422, 'Fill you email'));
@@ -29,17 +30,9 @@ const register = (req, res) => {
     if (exist) return res.status(404).json(errorFormat.set(401, 'El correo esta en uso', error));
     const user = new Clients();
     user.email = req.body.email;
-    user.name = req.body.name;
-    user.phone = req.body.phone;
-    user.username = req.body.username;
     user.setPassword(req.body.password);
-    user.verification = Math.random().toString(36).substring(7) + req.body.email;
     user.save((error, data) => {
       if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-      // const url = `${process.env.URL_WEB}/verification/${emails.encrypt(user.verification)}`;
-      // emails.SendEmail('verification', data.email, {
-      //   url: url,
-      // });
       return res.json(data.toAuthJSON());
     });
   });
@@ -72,11 +65,16 @@ const processText = async (req, res) => {
     De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar. 
     
     `;
-
     const response = await chatGPT(prompt);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
+    const template = new Templates({
+      original: req.body.text,
+      procesed: response,
+      email: req.body.email,
+    });
+    template.save();
     return res.status(200).json({ text: response });
   } catch (error) {
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
