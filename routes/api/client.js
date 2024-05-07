@@ -13,6 +13,6 @@ router.post('/processText', auth.client, auth.loggingIn.required, ClientControll
 router.get('/client/me', auth.client, auth.loggingIn.required, ClientController.getClient);
 router.post('/login', ClientController.login);
 router.post('/register', ClientController.register);
-router.get('/client/templates', ClientController.getTemplates);
+router.get('/client/templates', auth.client, auth.loggingIn.required, ClientController.getTemplates);
 
 module.exports = router;
