@@ -77,8 +77,8 @@ const processText = async (req, res) => {
         procesed: procesed,
         clientID: req.client._id,
       });
-      console.log(template);
-      await template.save();
+      const resTempalte = await template.save();
+      console.log(resTempalte);
     }
 
     return res.status(200).json({ text: procesed });
