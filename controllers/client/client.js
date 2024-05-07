@@ -69,7 +69,6 @@ const processText = async (req, res) => {
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
-    console.log(response);
     const daraParsed = JSON.parse(response.body);
     const procesed = daraParsed.choices[0].message.content;
     if (req.client._id) {
@@ -78,7 +77,8 @@ const processText = async (req, res) => {
         procesed: procesed,
         clientID: req.client._id,
       });
-      template.save();
+      console.log(template);
+      await template.save();
     }
 
     return res.status(200).json({ text: procesed });
