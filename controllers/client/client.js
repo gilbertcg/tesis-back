@@ -77,8 +77,7 @@ const processText = async (req, res) => {
         procesed: procesed,
         clientID: req.client._id,
       });
-      const resTempalte = await template.save();
-      console.log(resTempalte);
+      await template.save();
     }
 
     return res.status(200).json({ text: procesed });
@@ -91,10 +90,10 @@ const getTemplates = async (req, res) => {
   let page = 1;
   let limit = 10;
   let filter = {
-    clientID: req.client._id,
+    clientID: new mongoose.Types.ObjectId(req.client._id),
   };
   const sort = {};
-
+  console.log(req.client._id);
   if (typeof req.query.page !== 'undefined') page = Number(req.query.page);
   if (typeof req.query.limit !== 'undefined') limit = Number(req.query.limit);
   const conf = [{ $match: filter }];
