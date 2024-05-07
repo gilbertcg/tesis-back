@@ -87,6 +87,29 @@ const processText = async (req, res) => {
   }
 };
 
+const getTemplates = async (req, res) => {
+  let page = 1;
+  let limit = 10;
+  let filter = {
+    clientID: req.client._id,
+  };
+  const sort = {};
+
+  if (typeof req.query.page !== 'undefined') page = Number(req.query.page);
+  if (typeof req.query.limit !== 'undefined') limit = Number(req.query.limit);
+  const conf = [{ $match: filter }];
+  sort[req.query.sortKey] = req.query.sort === 'desc' ? -1 : 1;
+  conf.push({ $sort: sort });
+  conf.push({ $skip: limit * page - limit }, { $limit: limit });
+  const agg = Templates.aggregate(conf);
+  agg.options = { collation: { locale: 'es', strength: 3 } };
+  agg.exec(async (error, data) => {
+    const total = await Templates.countDocuments({});
+    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+    Templates.countDocuments(filter, (_err, count) => res.json({ data, count, total }));
+  });
+};
+
 const chatGPT = prompt =>
   new Promise(resolve => {
     try {
@@ -122,4 +145,5 @@ module.exports = {
   login,
   getClient,
   register,
+  getTemplates,
 };
