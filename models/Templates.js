@@ -3,11 +3,9 @@ const mongoose = require('mongoose');
 
 const TemplatesSchema = new mongoose.Schema(
   {
-    email: {
-      type: String,
-      lowercase: true,
+    clientID: {
+      type: mongoose.Schema.Types.ObjectId,
       index: true,
-      trim: true,
     },
     original: {
       type: String,

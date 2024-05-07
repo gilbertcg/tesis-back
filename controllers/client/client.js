@@ -69,11 +69,11 @@ const processText = async (req, res) => {
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
-    if (req.body.email) {
+    if (req.client._id) {
       const template = new Templates({
         original: req.body.text,
         procesed: response,
-        email: req.body.email,
+        clientID: req.client._id,
       });
       template.save();
     }

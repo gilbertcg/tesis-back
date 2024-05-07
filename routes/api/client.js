@@ -7,7 +7,7 @@ const auth = require('../../routes/auth');
 const ClientController = require('../../controllers/client/client');
 
 // client routes
-router.post('/processText', ClientController.processText);
+router.post('/processText', auth.client, auth.loggingIn.required, ClientController.processText);
 
 // client routes
 router.get('/me', auth.client, auth.loggingIn.required, ClientController.getClient);
