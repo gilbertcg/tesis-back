@@ -69,6 +69,7 @@ const processText = async (req, res) => {
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
+    console.log(response);
     if (req.client._id) {
       const template = new Templates({
         original: req.body.text,
