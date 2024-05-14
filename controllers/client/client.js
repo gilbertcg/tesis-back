@@ -64,6 +64,8 @@ const processText = async (req, res) => {
 
     De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar. 
     
+    Quiero que me des 4 choises.
+
     `;
     const response = await chatGPT(prompt);
     if (!response) {
