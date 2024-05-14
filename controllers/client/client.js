@@ -70,18 +70,17 @@ const processText = async (req, res) => {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
     const daraParsed = JSON.parse(response.body);
-    const procesed = daraParsed.choices[0].message.content;
-    console.log(daraParsed.choices);
-    if (req.client._id) {
-      const template = new Templates({
-        original: req.body.text,
-        procesed: procesed,
-        clientID: req.client._id,
-      });
-      await template.save();
+    for (const choise of daraParsed.choices) {
+      if (req.client._id) {
+        const template = new Templates({
+          original: req.body.text,
+          procesed: choise.message.content,
+          clientID: req.client._id,
+        });
+        template.save();
+      }
     }
-
-    return res.status(200).json({ text: procesed });
+    return res.status(200).json({ choises: daraParsed.choices });
   } catch (error) {
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
   }
