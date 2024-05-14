@@ -63,8 +63,6 @@ const processText = async (req, res) => {
     Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
 
     De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar. 
-    
-    Quiero que me des 4 choises.
 
     `;
     const response = await chatGPT(prompt);
@@ -125,6 +123,7 @@ const chatGPT = prompt =>
           body: JSON.stringify({
             model: 'gpt-3.5-turbo',
             messages: [{ role: 'user', content: prompt }],
+            n: 4,
           }),
         },
         async (err, resp, body) => {
