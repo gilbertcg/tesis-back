@@ -71,6 +71,7 @@ const processText = async (req, res) => {
     }
     const daraParsed = JSON.parse(response.body);
     const procesed = daraParsed.choices[0].message.content;
+    console.log(daraParsed.choices);
     if (req.client._id) {
       const template = new Templates({
         original: req.body.text,
