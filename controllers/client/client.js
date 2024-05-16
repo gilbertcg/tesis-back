@@ -65,7 +65,49 @@ const processText = async (req, res) => {
     De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar. 
 
     `;
-    const response = await chatGPT(prompt);
+    const response = await chatGPT(prompt, 4);
+    if (!response) {
+      return res.status(400).json(errorFormat.set(400, 'Error in system'));
+    }
+    const daraParsed = JSON.parse(response.body);
+    for (const choise of daraParsed.choices) {
+      if (req.client._id) {
+        const template = new Templates({
+          original: req.body.text,
+          procesed: choise.message.content,
+          clientID: req.client._id,
+        });
+        template.save();
+      }
+    }
+    return res.status(200).json({ choises: daraParsed.choices });
+  } catch (error) {
+    return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+  }
+};
+
+const translateText = async (req, res) => {
+  if (req.body.text.lenght > 3000) {
+    return res.status(400).json(errorFormat.set(400, 'text to long', ''));
+  }
+  try {
+    const prompt = `
+    Ahora quiero que actues como un profesional en la traduccion de idiomas,
+   
+    A continuacion te voy a dar el siguiente texto: 
+    
+    ${req.body.text}
+
+    El codigo anterior es un mensaje de correo electronico.
+
+    Queiero que traduzcas ese text0 a ${req.body.lang}.
+
+    No agregues texto de mas ni investes nada nuevo solo centrate en la traduccion del idioma. 
+
+    De resultado quiero que devuelvas un texto plano del correo electronico traducido que voy a enviar. 
+
+    `;
+    const response = await chatGPT(prompt, 1);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
@@ -93,7 +135,6 @@ const getTemplates = async (req, res) => {
     clientID: new mongoose.Types.ObjectId(req.client._id),
   };
   const sort = {};
-  console.log(req.client._id);
   if (typeof req.query.page !== 'undefined') page = Number(req.query.page);
   if (typeof req.query.limit !== 'undefined') limit = Number(req.query.limit);
   const conf = [{ $match: filter }];
@@ -109,7 +150,7 @@ const getTemplates = async (req, res) => {
   });
 };
 
-const chatGPT = prompt =>
+const chatGPT = (prompt, numberOfChoises) =>
   new Promise(resolve => {
     try {
       request.post(
@@ -122,7 +163,7 @@ const chatGPT = prompt =>
           body: JSON.stringify({
             model: 'gpt-3.5-turbo',
             messages: [{ role: 'user', content: prompt }],
-            n: 4,
+            n: numberOfChoises,
           }),
         },
         async (err, resp, body) => {
@@ -146,4 +187,5 @@ module.exports = {
   getClient,
   register,
   getTemplates,
+  translateText,
 };

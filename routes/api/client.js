@@ -12,5 +12,6 @@ router.post('/login', ClientController.login);
 router.post('/register', ClientController.register);
 router.get('/client/templates', auth.client, auth.loggingIn.required, ClientController.getTemplates);
 router.post('/processText', auth.client, auth.loggingIn.required, ClientController.processText);
+router.post('/translateText', auth.client, auth.loggingIn.required, ClientController.translateText);
 
 module.exports = router;
