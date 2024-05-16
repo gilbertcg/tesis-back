@@ -112,17 +112,15 @@ const translateText = async (req, res) => {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
     const daraParsed = JSON.parse(response.body);
-    for (const choise of daraParsed.choices) {
-      if (req.client._id) {
-        const template = new Templates({
-          original: req.body.text,
-          procesed: choise.message.content,
-          clientID: req.client._id,
-        });
-        template.save();
-      }
+    if (req.client._id) {
+      const template = new Templates({
+        original: req.body.text,
+        procesed: daraParsed.choices[0].message.content,
+        clientID: req.client._id,
+      });
+      template.save();
     }
-    return res.status(200).json({ choises: daraParsed.choices });
+    return res.status(200).json({ translation: daraParsed.choices[0].message.content });
   } catch (error) {
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
   }
