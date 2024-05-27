@@ -44,7 +44,8 @@ const processText = async (req, res) => {
   }
   try {
     const prompt = `
-    Ahora quiero que actues como un profesional en la comunicacion por correos electronicos,
+    Ahora quiero que actues como un profesional en la comunicacion por
+    correos electronicos,
    
     A continuacion te voy a dar el siguiente texto: 
     
@@ -52,17 +53,23 @@ const processText = async (req, res) => {
 
     El codigo anterior es un mensaje de correo electronico.
 
-    Ahora quiero que analices el mensaje escrito por el usuario y lo modifiques por un mensaje mas profesional y amigable.
+    Ahora quiero que analices el mensaje escrito por el usuario y
+    lo modifiques por un mensaje ${req.body.sentiment || 'profesional'} y amigable.
 
-    No quiero que agregues marcadores o placeholders al mensaje modificado, como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario], [Nombre del destinatario], o cualquier campo que tenga que se llenado por el usuario.
+    No quiero que agregues marcadores o placeholders al mensaje modificado,
+    como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario],
+    [Nombre del destinatario], o cualquier campo que tenga que se llenado por 
+    el usuario.
     
-    Tampoco quiero que te refieras al destinatario como usuario o destinatario, evita usar oraciones donde tengas que agregar eso.
+    Tampoco quiero que te refieras al destinatario como usuario o destinatario, 
+    evita usar oraciones donde tengas que agregar eso.
 
     No alargues los parrafos nuevos a mas de 100 palabras por parrafo. 
 
     Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
 
-    De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar. 
+    De resultado quiero que devuelvas un texto plano del correo electronico 
+    que voy a enviar. 
 
     `;
     const response = await chatGPT(prompt, 4);
@@ -92,7 +99,7 @@ const translateText = async (req, res) => {
   }
   try {
     const prompt = `
-    Ahora quiero que actues como un profesional en la traduccion de idiomas,
+    Quiero que actues como un profesional en la traduccion de idiomas,
    
     A continuacion te voy a dar el siguiente texto: 
     
@@ -100,11 +107,13 @@ const translateText = async (req, res) => {
 
     El codigo anterior es un mensaje de correo electronico.
 
-    Queiero que traduzcas ese text0 a ${req.body.lang}.
+    Queiero que traduzcas ese texto a ${req.body.lang}.
 
-    No agregues texto de mas ni investes nada nuevo solo centrate en la traduccion del idioma. 
+    No agregues texto de mas ni inventes nada nuevo, solo centrate en la
+    traduccion del idioma. 
 
-    De resultado quiero que devuelvas un texto plano del correo electronico traducido que voy a enviar. 
+    De resultado quiero que devuelvas un texto plano del correo electronico traducido
+    que voy a enviar. 
 
     `;
     const response = await chatGPT(prompt, 1);
