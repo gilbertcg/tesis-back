@@ -2,7 +2,7 @@ const request = require('request');
 const passport = require('passport');
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
-const { Document } = require('langchain/document');
+// const { Document } = require('langchain/document');
 
 const errorFormat = require('../../functions/errorCode');
 
