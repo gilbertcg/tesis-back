@@ -1,6 +1,7 @@
 const request = require('request');
 const passport = require('passport');
 const mongoose = require('mongoose');
+const pdf = require('pdf-parse');
 
 const errorFormat = require('../../functions/errorCode');
 
@@ -54,7 +55,7 @@ const processText = async (req, res) => {
     El codigo anterior es un mensaje de correo electronico.
 
     Ahora quiero que analices el mensaje escrito por el usuario y
-    lo modifiques por un mensaje ${req.body.sentiment || 'profesional'} y amigable.
+    lo modifiques por un mensaje ${req.body.sentiment || 'formal'} y amigable.
 
     No quiero que agregues marcadores o placeholders al mensaje modificado,
     como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario],
@@ -157,6 +158,13 @@ const getTemplates = async (req, res) => {
   });
 };
 
+const setPdf = async (req, res) => {
+  console.log('pdf normal', req.file.buffer);
+  const pdfPrcessed = await pdf(req.file.buffer);
+  console.log('pdf procesado', pdfPrcessed);
+  return res.status(200).json({ ok: true });
+};
+
 const chatGPT = (prompt, numberOfChoises) =>
   new Promise(resolve => {
     try {
@@ -195,4 +203,5 @@ module.exports = {
   register,
   getTemplates,
   translateText,
+  setPdf,
 };
