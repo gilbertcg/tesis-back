@@ -183,6 +183,7 @@ const getFiles = async (req, res) => {
 };
 
 const setPdf = async (req, res) => {
+  console.log('entra');
   const pdfPrcessed = await pdf(req.file.buffer);
   const metadata = { source: 'blob', blobType: req.file.buffer.type };
   const file = new Files({
