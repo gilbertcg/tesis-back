@@ -11,7 +11,7 @@ const ClientController = require('../../controllers/client/client');
 router.get('/client/me', auth.client, auth.loggingIn.required, ClientController.getClient);
 router.post('/login', ClientController.login);
 router.post('/register', ClientController.register);
-router.post('/client/pdf', upload.single('pdf'), ClientController.register);
+router.post('/client/pdf', upload.single('pdf'), ClientController.setPdf);
 router.get('/client/templates', auth.client, auth.loggingIn.required, ClientController.getTemplates);
 router.post('/processText', auth.client, auth.loggingIn.required, ClientController.processText);
 router.post('/translateText', auth.client, auth.loggingIn.required, ClientController.translateText);
