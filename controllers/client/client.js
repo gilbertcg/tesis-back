@@ -163,14 +163,14 @@ const setPdf = async (req, res) => {
   const pdfPrcessed = await pdf(req.file.buffer);
   const metadata = { source: 'blob', blobType: req.file.buffer.type };
   console.log(metadata);
-  const documentLangChain = new Document({
-    pageContent: pdfPrcessed.text,
-    metadata: {
-      ...metadata,
-      pdf_numpages: pdfPrcessed.numpages,
-    },
-  });
-  console.log(documentLangChain);
+  // const documentLangChain = new Document({
+  //   pageContent: pdfPrcessed.text,
+  //   metadata: {
+  //     ...metadata,
+  //     pdf_numpages: pdfPrcessed.numpages,
+  //   },
+  // });
+  console.log(pdfPrcessed);
   return res.status(200).json({ ok: true });
 };
 
