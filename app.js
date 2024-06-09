@@ -48,6 +48,8 @@ mongoose
 mongoose.Promise = global.Promise;
 
 require('./models/Clients');
+require('./models/Files');
+require('./models/Enterprises');
 require('./models/Templates');
 require('./config/passport');
 

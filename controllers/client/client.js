@@ -11,6 +11,7 @@ const apiKey = process.env.CHATGPT_KEY;
 
 const Clients = mongoose.model('Clients');
 const Templates = mongoose.model('Templates');
+const Files = mongoose.model('Files');
 
 const login = async (req, res) => {
   if (!req.body.email) return res.status(422).json(errorFormat.set(422, 'Fill you email'));
@@ -162,7 +163,11 @@ const getTemplates = async (req, res) => {
 const setPdf = async (req, res) => {
   const pdfPrcessed = await pdf(req.file.buffer);
   const metadata = { source: 'blob', blobType: req.file.buffer.type };
-  console.log(metadata);
+  const file = new Files({
+    name: 'file',
+    clientID: req.client._id,
+  });
+  await file.save();
   // const documentLangChain = new Document({
   //   pageContent: pdfPrcessed.text,
   //   metadata: {
@@ -170,7 +175,7 @@ const setPdf = async (req, res) => {
   //     pdf_numpages: pdfPrcessed.numpages,
   //   },
   // });
-  console.log(pdfPrcessed);
+  console.log(pdfPrcessed, metadata);
   return res.status(200).json({ ok: true });
 };
 
