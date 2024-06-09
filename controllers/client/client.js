@@ -2,7 +2,7 @@ const request = require('request');
 const passport = require('passport');
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
-// const { Document } = require('langchain/document');
+const { Document } = require('langchain/document');
 
 const errorFormat = require('../../functions/errorCode');
 
@@ -191,14 +191,14 @@ const setPdf = async (req, res) => {
     clientID: req.client._id,
   });
   await file.save();
-  // const documentLangChain = new Document({
-  //   pageContent: pdfPrcessed.text,
-  //   metadata: {
-  //     ...metadata,
-  //     pdf_numpages: pdfPrcessed.numpages,
-  //   },
-  // });
-  console.log(req.body);
+  const documentLangChain = new Document({
+    pageContent: pdfPrcessed.text,
+    metadata: {
+      ...metadata,
+      pdf_numpages: pdfPrcessed.numpages,
+    },
+  });
+  console.log(documentLangChain);
   return res.status(200).json({ ok: true });
 };
 
