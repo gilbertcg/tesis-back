@@ -175,7 +175,7 @@ const setPdf = async (req, res) => {
   //     pdf_numpages: pdfPrcessed.numpages,
   //   },
   // });
-  console.log(pdfPrcessed, metadata);
+  console.log(req.body);
   return res.status(200).json({ ok: true });
 };
 
