@@ -160,11 +160,33 @@ const getTemplates = async (req, res) => {
   });
 };
 
+const getFiles = async (req, res) => {
+  let page = 1;
+  let limit = 10;
+  let filter = {
+    clientID: new mongoose.Types.ObjectId(req.client._id),
+  };
+  const sort = {};
+  if (typeof req.query.page !== 'undefined') page = Number(req.query.page);
+  if (typeof req.query.limit !== 'undefined') limit = Number(req.query.limit);
+  const conf = [{ $match: filter }];
+  sort[req.query.sortKey] = req.query.sort === 'desc' ? -1 : 1;
+  conf.push({ $sort: sort });
+  conf.push({ $skip: limit * page - limit }, { $limit: limit });
+  const agg = Files.aggregate(conf);
+  agg.options = { collation: { locale: 'es', strength: 3 } };
+  agg.exec(async (error, data) => {
+    const total = await Files.countDocuments({});
+    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+    Files.countDocuments(filter, (_err, count) => res.json({ data, count, total }));
+  });
+};
+
 const setPdf = async (req, res) => {
   const pdfPrcessed = await pdf(req.file.buffer);
   const metadata = { source: 'blob', blobType: req.file.buffer.type };
   const file = new Files({
-    name: 'file',
+    name: req.body.fileName,
     clientID: req.client._id,
   });
   await file.save();
@@ -218,4 +240,5 @@ module.exports = {
   getTemplates,
   translateText,
   setPdf,
+  getFiles,
 };
