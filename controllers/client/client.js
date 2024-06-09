@@ -2,6 +2,7 @@ const request = require('request');
 const passport = require('passport');
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
+const { Document } = require('langchain/document');
 
 const errorFormat = require('../../functions/errorCode');
 
@@ -159,9 +160,17 @@ const getTemplates = async (req, res) => {
 };
 
 const setPdf = async (req, res) => {
-  console.log('pdf normal', req.file.buffer);
   const pdfPrcessed = await pdf(req.file.buffer);
-  console.log('pdf procesado', pdfPrcessed);
+  const metadata = { source: 'blob', blobType: req.file.buffer.type };
+  console.log(metadata);
+  const documentLangChain = new Document({
+    pageContent: pdfPrcessed.text,
+    metadata: {
+      ...metadata,
+      pdf_numpages: pdfPrcessed.numpages,
+    },
+  });
+  console.log(documentLangChain);
   return res.status(200).json({ ok: true });
 };
 
