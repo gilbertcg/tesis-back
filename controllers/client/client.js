@@ -65,11 +65,10 @@ const processText = async (req, res) => {
     const documentPromise = new Promise(resolve => {
       resolveWithDocuments = resolve;
     });
-    console.log(vectorStore);
     const retriever = vectorStore.asRetriever({
       callbacks: [
         {
-          handleRetrieverEnd(documents) {
+          handleRetrieverEnd: function (documents) {
             resolveWithDocuments(documents);
           },
         },
@@ -78,7 +77,7 @@ const processText = async (req, res) => {
 
     console.log('paso 2');
     const chain = makeChain(retriever);
-    const sourceDocuments = await documentPromise;
+    // const sourceDocuments = await documentPromise;
     console.log('paso 3');
     const response = await chain.invoke({
       text: req.body.text,
@@ -95,8 +94,6 @@ const processText = async (req, res) => {
       });
       template.save();
     }
-    console.log(sourceDocuments);
-
     return res.status(200).json({ choises: [{ message: { content: response } }] });
   } catch (error) {
     console.log(error);
