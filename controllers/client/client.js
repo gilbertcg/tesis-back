@@ -65,6 +65,7 @@ const processText = async (req, res) => {
     const documentPromise = new Promise(resolve => {
       resolveWithDocuments = resolve;
     });
+    console.log(vectorStore);
     const retriever = vectorStore.asRetriever({
       callbacks: [
         {
