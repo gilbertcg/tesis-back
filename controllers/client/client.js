@@ -60,7 +60,7 @@ const processText = async (req, res) => {
       namespace: PINECONE_NAME_SPACE,
     });
     let resolveWithDocuments;
-    const documentPromise = new Promise(resolve => {
+    new Promise(resolve => {
       resolveWithDocuments = resolve;
     });
     const retriever = vectorStore.asRetriever({
@@ -73,7 +73,6 @@ const processText = async (req, res) => {
       ],
     });
     const chain = makeChain(retriever);
-    // const sourceDocuments = await documentPromise;
     const response = await chain.invoke({
       text: req.body.text,
       sentiment: req.body.sentiment || 'formal',
@@ -311,7 +310,6 @@ const makeChain = retriever => {
   });
   const standaloneQuestionChain = RunnableSequence.from([condenseQuestionPrompt, model, new StringOutputParser()]);
   const retrievalChain = retriever.pipe(combineDocumentsFn);
-  console.log(retrievalChain);
   const answerChain = RunnableSequence.from([
     {
       context: RunnableSequence.from([input => input.text, retrievalChain]),
