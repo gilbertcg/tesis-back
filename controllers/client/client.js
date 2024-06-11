@@ -72,7 +72,6 @@ const processText = async (req, res) => {
         },
       ],
     });
-    console.log(retriever);
     const chain = makeChain(retriever);
     // const sourceDocuments = await documentPromise;
     const response = await chain.invoke({
