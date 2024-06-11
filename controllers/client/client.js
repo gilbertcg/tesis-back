@@ -59,8 +59,6 @@ const processText = async (req, res) => {
       textKey: 'text',
       namespace: PINECONE_NAME_SPACE,
     });
-    console.log('paso 1');
-
     let resolveWithDocuments;
     const documentPromise = new Promise(resolve => {
       resolveWithDocuments = resolve;
@@ -75,10 +73,8 @@ const processText = async (req, res) => {
       ],
     });
     console.log(retriever);
-    console.log('paso 2');
     const chain = makeChain(retriever);
     // const sourceDocuments = await documentPromise;
-    console.log('paso 3');
     const response = await chain.invoke({
       text: req.body.text,
       sentiment: req.body.sentiment || 'formal',
@@ -316,6 +312,7 @@ const makeChain = retriever => {
   });
   const standaloneQuestionChain = RunnableSequence.from([condenseQuestionPrompt, model, new StringOutputParser()]);
   const retrievalChain = retriever.pipe(combineDocumentsFn);
+  console.log(retrievalChain);
   const answerChain = RunnableSequence.from([
     {
       context: RunnableSequence.from([input => input.text, retrievalChain]),
