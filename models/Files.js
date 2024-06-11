@@ -11,6 +11,10 @@ const FilesSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       index: true,
     },
+    pineconeID: {
+      type: String,
+      index: true,
+    },
     name: {
       type: String,
     },

@@ -16,5 +16,6 @@ router.get('/client/files', auth.client, auth.loggingIn.required, ClientControll
 router.get('/client/templates', auth.client, auth.loggingIn.required, ClientController.getTemplates);
 router.post('/processText', auth.client, auth.loggingIn.required, ClientController.processText);
 router.post('/translateText', auth.client, auth.loggingIn.required, ClientController.translateText);
+router.get('/pineconeFile', ClientController.getFilesPinecone);
 
 module.exports = router;

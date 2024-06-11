@@ -7,6 +7,7 @@ const https = require('https');
 const http = require('http');
 const fs = require('fs');
 require('dotenv').config();
+const { pinecone } = require('./config/pinecone-client');
 
 const certs = {
   key: '',
