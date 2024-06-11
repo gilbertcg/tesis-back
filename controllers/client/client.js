@@ -61,6 +61,9 @@ const processText = async (req, res) => {
     });
 
     let resolveWithDocuments;
+    const documentPromise = new Promise(resolve => {
+      resolveWithDocuments = resolve;
+    });
     const retriever = vectorStore.asRetriever({
       callbacks: [
         {
@@ -71,6 +74,7 @@ const processText = async (req, res) => {
       ],
     });
     const chain = makeChain(retriever);
+    const sourceDocuments = await documentPromise;
     const response = await chain.invoke({
       text: req.body.text,
       sentiment: req.body.sentiment || 'formal',
@@ -87,7 +91,7 @@ const processText = async (req, res) => {
       template.save();
     }
 
-    return res.status(200).json({ choises: [{ message: { content: response } }] });
+    return res.status(200).json({ choises: [{ message: { content: response, sourceDocuments } }] });
   } catch (error) {
     console.log(error);
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
