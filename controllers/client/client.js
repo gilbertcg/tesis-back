@@ -59,6 +59,7 @@ const processText = async (req, res) => {
       textKey: 'text',
       namespace: PINECONE_NAME_SPACE,
     });
+    console.log('paso 1');
 
     let resolveWithDocuments;
     const documentPromise = new Promise(resolve => {
@@ -73,8 +74,11 @@ const processText = async (req, res) => {
         },
       ],
     });
+
+    console.log('paso 2');
     const chain = makeChain(retriever);
     const sourceDocuments = await documentPromise;
+    console.log('paso 3');
     const response = await chain.invoke({
       text: req.body.text,
       sentiment: req.body.sentiment || 'formal',
