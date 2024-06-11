@@ -5,17 +5,17 @@ const upload = multer();
 
 const auth = require('../../routes/auth');
 
-const ClientController = require('../../controllers/client/client');
+const ClientController = require('../../controllers/client');
+const AuthController = require('../../controllers/auth');
 
 // client routes
-router.get('/client/me', auth.client, auth.loggingIn.required, ClientController.getClient);
-router.post('/login', ClientController.login);
-router.post('/register', ClientController.register);
+router.get('/client/me', auth.client, auth.loggingIn.required, AuthController.getClient);
+router.post('/login', AuthController.login);
+router.post('/register', AuthController.register);
 router.post('/client/pdf', auth.client, auth.loggingIn.required, upload.single('pdf'), ClientController.setPdf);
 router.get('/client/files', auth.client, auth.loggingIn.required, ClientController.getFiles);
 router.get('/client/templates', auth.client, auth.loggingIn.required, ClientController.getTemplates);
-router.post('/processText', auth.client, auth.loggingIn.required, ClientController.processText);
-router.post('/translateText', auth.client, auth.loggingIn.required, ClientController.translateText);
-router.get('/pineconeFile', ClientController.getFilesPinecone);
+router.post('/client/processText', auth.client, auth.loggingIn.required, ClientController.processText);
+router.post('/client/translateText', auth.client, auth.loggingIn.required, ClientController.translateText);
 
 module.exports = router;
