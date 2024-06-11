@@ -90,8 +90,9 @@ const processText = async (req, res) => {
       });
       template.save();
     }
+    console.log(sourceDocuments);
 
-    return res.status(200).json({ choises: [{ message: { content: response, sourceDocuments } }] });
+    return res.status(200).json({ choises: [{ message: { content: response } }] });
   } catch (error) {
     console.log(error);
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
