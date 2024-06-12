@@ -2,48 +2,30 @@ const { ChatPromptTemplate } = require('langchain/prompts');
 const { RunnableSequence } = require('langchain/schema/runnable');
 const { StringOutputParser } = require('langchain/schema/output_parser');
 const { ChatOpenAI } = require('langchain/chat_models/openai');
+const { Document } = require('langchain/document');
+const { RecursiveCharacterTextSplitter } = require('langchain/text_splitter');
+const { OpenAIEmbeddings } = require('langchain/embeddings/openai');
+const { PineconeStore } = require('langchain/vectorstores/pinecone');
+const { pinecone } = require('../config/pinecone-client');
+const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
 const request = require('request');
 
-const CONDENSE_TEMPLATE = `
-Dado el siguiente texto de correcto electronico, reformule el texto para que sea un texto independiente.
-texto de correo electronico: {text}
-texto independiente:
-`;
-const QA_TEMPLATE = `Quiero que actues como un profesional en la comunicacion por
-correos electronicos,
+const CONDENSE_TEMPLATE_TEST = `Dada la siguiente pregunta de seguimiento, reformule la pregunta de seguimiento para que sea una pregunta independiente
 
-A continuacion te voy a dar el siguiente texto: 
+Pregunta de seguimiento: {question}
+pregunta independiente:`;
 
-texto: {text}
-
-El codigo anterior es un mensaje de correo electronico.
-
-Ahora quiero que analices el mensaje escrito por el usuario y
-lo modifiques por un mensaje {sentiment} y amigable.
-
-el siguiente contexto pertenece a una lista de correos electronicos creados previamente por miembros de la empresa, puedes usarlo para sacar informacion
-de la empresa relevante para este correo electronico.
+const QA_TEMPLATE_TEST = `Eres un investigador experto. Utilice las siguientes piezas de contexto para responder la pregunta al final.
+Si no sabe la respuesta, simplemente diga que no la sabe. NO intente inventar una respuesta.
+Si la pregunta no está relacionada con el contexto, responda cortésmente que está configurado para responder solo preguntas relacionadas con el contexto.
 
 <context>
   {context}
 </context>
 
 
-
-No quiero que agregues marcadores o placeholders al mensaje modificado,
-como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario],
-[Nombre del destinatario], o cualquier campo que tenga que se llenado por 
-el usuario.
-
-Tampoco quiero que te refieras al destinatario como usuario o destinatario, 
-evita usar oraciones donde tengas que agregar eso.
-
-No alargues los parrafos nuevos a mas de 100 palabras por parrafo. 
-
-Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
-
-De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar, evita escribir textos como previos al mensaje de correo, como "Claro, aquí tienes el mensaje modificado, o Claro, aquí tienes el mensaje".
-`;
+Pregunta: {question}
+Respuesta útil: `;
 
 const combineDocumentsFn = (docs, separator = '\n\n') => {
   const serializedDocs = docs.map(doc => doc.pageContent);
@@ -51,20 +33,18 @@ const combineDocumentsFn = (docs, separator = '\n\n') => {
 };
 
 const makeChain = retriever => {
-  const condenseQuestionPrompt = ChatPromptTemplate.fromTemplate(CONDENSE_TEMPLATE);
-  const answerPrompt = ChatPromptTemplate.fromTemplate(QA_TEMPLATE);
+  const condenseQuestionPrompt = ChatPromptTemplate.fromTemplate(CONDENSE_TEMPLATE_TEST);
+  const answerPrompt = ChatPromptTemplate.fromTemplate(QA_TEMPLATE_TEST);
   const model = new ChatOpenAI({
     temperature: 0,
     modelName: 'gpt-3.5-turbo',
-    n: 4,
   });
   const standaloneQuestionChain = RunnableSequence.from([condenseQuestionPrompt, model, new StringOutputParser()]);
   const retrievalChain = retriever.pipe(combineDocumentsFn);
   const answerChain = RunnableSequence.from([
     {
-      context: RunnableSequence.from([input => input.text, retrievalChain]),
-      text: input => input.text,
-      sentiment: input => input.sentiment,
+      context: RunnableSequence.from([input => input.question, retrievalChain]),
+      question: input => input.question,
     },
     answerPrompt,
     model,
@@ -72,12 +52,69 @@ const makeChain = retriever => {
   ]);
   const conversationalRetrievalQAChain = RunnableSequence.from([
     {
-      text: standaloneQuestionChain,
-      chat_history: input => input.chat_history,
+      question: standaloneQuestionChain,
     },
     answerChain,
   ]);
+  console.log(conversationalRetrievalQAChain);
   return conversationalRetrievalQAChain;
+};
+
+const questionProcess = async (question, namespace) => {
+  try {
+    const index = pinecone.Index(PINECONE_INDEX_NAME);
+    const vectorStore = await PineconeStore.fromExistingIndex(new OpenAIEmbeddings({}), {
+      pineconeIndex: index,
+      textKey: 'text',
+      namespace: namespace,
+    });
+    let resolveWithDocuments;
+    new Promise(resolve => {
+      resolveWithDocuments = resolve;
+    });
+    const retriever = vectorStore.asRetriever({
+      callbacks: [
+        {
+          handleRetrieverEnd: function (documents) {
+            resolveWithDocuments(documents);
+          },
+        },
+      ],
+    });
+    const chain = makeChain(retriever);
+    const sanitizedQuestion = question.trim().replaceAll('\n', ' ');
+    const response = await chain.invoke({
+      question: sanitizedQuestion,
+    });
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const savePDF = async (namespace, pdfPrcessed, metadata) => {
+  const documentLangChain = new Document({
+    pageContent: pdfPrcessed.text,
+    metadata: {
+      ...metadata,
+      pdf_numpages: pdfPrcessed.numpages,
+    },
+  });
+
+  const textSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 200,
+  });
+
+  const docs = await textSplitter.splitDocuments([documentLangChain]);
+  const embeddings = new OpenAIEmbeddings();
+  const index = pinecone.Index(PINECONE_INDEX_NAME);
+  await PineconeStore.fromDocuments(docs, embeddings, {
+    pineconeIndex: index,
+    namespace: namespace,
+    textKey: 'text',
+  });
 };
 
 const chatGPT = (prompt, numberOfChoises) =>
@@ -114,4 +151,6 @@ const chatGPT = (prompt, numberOfChoises) =>
 module.exports = {
   makeChain,
   chatGPT,
+  questionProcess,
+  savePDF,
 };

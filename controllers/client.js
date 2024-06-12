@@ -1,13 +1,6 @@
 const mongoose = require('mongoose');
-const uuidd = require('uuid');
 const pdf = require('pdf-parse');
-const { Document } = require('langchain/document');
-const { RecursiveCharacterTextSplitter } = require('langchain/text_splitter');
-const { OpenAIEmbeddings } = require('langchain/embeddings/openai');
-const { PineconeStore } = require('langchain/vectorstores/pinecone');
 
-const { pinecone } = require('../config/pinecone-client');
-const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
 const errorFormat = require('../functions/errorCode');
 const langchainController = require('./langchain');
 
@@ -15,44 +8,58 @@ const Templates = mongoose.model('Templates');
 const Files = mongoose.model('Files');
 
 const processText = async (req, res) => {
+  const empresa = {
+    context:
+      'Nombre de la empresa: Protos Tech, ubicacion de la empresa: Ciudad de panama, pagina web de la empresa: www.protostech.com',
+  };
   try {
-    const index = pinecone.Index(PINECONE_INDEX_NAME);
-    const vectorStore = await PineconeStore.fromExistingIndex(new OpenAIEmbeddings({}), {
-      pineconeIndex: index,
-      textKey: 'text',
-      namespace: req.client._id,
-    });
-    let resolveWithDocuments;
-    new Promise(resolve => {
-      resolveWithDocuments = resolve;
-    });
-    const retriever = vectorStore.asRetriever({
-      callbacks: [
-        {
-          handleRetrieverEnd: function (documents) {
-            resolveWithDocuments(documents);
-          },
-        },
-      ],
-    });
-    const chain = langchainController.makeChain(retriever);
-    const response = await chain.invoke({
-      text: req.body.text,
-      sentiment: req.body.sentiment || 'formal',
-    });
-    console.log(response);
+    const prompt = `Quiero que actues como un profesional en la comunicacion por
+    correos electronicos,
+    
+    A continuacion te voy a dar el siguiente texto: 
+    
+    texto: ${req.body.text}
+    
+    El codigo anterior es un mensaje de correo electronico empresarial, cuyo contexto de la empresa es el siguiente.
+
+    contexto empresa: ${empresa.context}
+
+    usa este contexto de la empresa para completar campos que el texto original no tenga
+    
+    Ahora quiero que analices el mensaje escrito por el usuario y
+    lo modifiques por un mensaje ${req.body.sentiment} y amigable.
+    
+    No quiero que agregues marcadores o placeholders al mensaje modificado,
+    como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario],
+    [Nombre del destinatario], o cualquier campo que tenga que se llenado por 
+    el usuario.
+    
+    Tampoco quiero que te refieras al destinatario como usuario o destinatario, 
+    evita usar oraciones donde tengas que agregar eso.
+    
+    No alargues los parrafos nuevos a mas de 100 palabras por parrafo. 
+    
+    Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
+    
+    De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar, evita escribir textos como previos al mensaje de correo, como "Claro, aquí tienes el mensaje modificado, o Claro, aquí tienes el mensaje".
+    `;
+    const response = await langchainController.chatGPT(prompt, 4);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
+    const daraParsed = JSON.parse(response.body);
+    console.log(daraParsed);
     if (req.client._id) {
-      const template = new Templates({
-        original: req.body.text,
-        procesed: response,
-        clientID: req.client._id,
-      });
-      template.save();
+      for (const choise of daraParsed.choices) {
+        const template = new Templates({
+          original: req.body.text,
+          procesed: choise.message.content,
+          clientID: req.client._id,
+        });
+        template.save();
+      }
     }
-    return res.status(200).json({ choises: [{ message: { content: response } }] });
+    return res.status(200).json({ choises: daraParsed.choices });
   } catch (error) {
     console.log(error);
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
@@ -95,7 +102,7 @@ const translateText = async (req, res) => {
       });
       template.save();
     }
-    return res.status(200).json({ translation: daraParsed.choices[0].message.content });
+    return res.status(200).json({ translation: [0].message.content });
   } catch (error) {
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
   }
@@ -148,33 +155,10 @@ const getFiles = async (req, res) => {
 const setPdf = async (req, res) => {
   const pdfPrcessed = await pdf(req.file.buffer);
   const metadata = { source: 'blob', blobType: req.file.mimetype };
+  await langchainController.savePDF(req.client._id, pdfPrcessed, metadata);
   const file = new Files({
     name: req.body.fileName,
     clientID: req.client._id,
-    pineconeID: uuidd.v4(),
-  });
-
-  const documentLangChain = new Document({
-    pageContent: pdfPrcessed.text,
-    metadata: {
-      ...metadata,
-      fileID: file.pineconeID,
-      pdf_numpages: pdfPrcessed.numpages,
-    },
-  });
-
-  const textSplitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
-    chunkOverlap: 200,
-  });
-
-  const docs = await textSplitter.splitDocuments([documentLangChain]);
-  const embeddings = new OpenAIEmbeddings();
-  const index = pinecone.Index(PINECONE_INDEX_NAME);
-  await PineconeStore.fromDocuments(docs, embeddings, {
-    pineconeIndex: index,
-    namespace: req.client._id,
-    textKey: 'text',
   });
   await file.save();
   return res.status(200).json({ ok: true });
