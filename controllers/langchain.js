@@ -16,8 +16,7 @@ Pregunta de seguimiento: {question}
 pregunta independiente:`;
 
 const QA_TEMPLATE_TEST = `Eres un investigador experto. Utilice las siguientes piezas de contexto para responder la pregunta al final.
-Si no sabe la respuesta, simplemente diga que no la sabe. NO intente inventar una respuesta.
-Si la pregunta no está relacionada con el contexto, responda cortésmente que está configurado para responder solo preguntas relacionadas con el contexto.
+Si no sabe la respuesta, simplemente diga que no la sabe. NO intente inventar una respuesta. 
 
 <context>
   {context}
@@ -56,7 +55,6 @@ const makeChain = retriever => {
     },
     answerChain,
   ]);
-  console.log(conversationalRetrievalQAChain);
   return conversationalRetrievalQAChain;
 };
 
@@ -86,7 +84,6 @@ const questionProcess = async (question, namespace) => {
     const response = await chain.invoke({
       question: sanitizedQuestion,
     });
-    console.log(response);
     return response;
   } catch (error) {
     console.log(error);
@@ -115,6 +112,39 @@ const savePDF = async (namespace, pdfPrcessed, metadata) => {
     namespace: namespace,
     textKey: 'text',
   });
+
+  const questions = [
+    { question: 'Cual es el nombre de la empresa?', result: 'Nombre de la empresa: ' },
+    { question: 'Cual es la ubicacion de la empresa?', result: 'Ubicacion de la empresa: ' },
+    {
+      question: 'Cual es la manera promedio de empezar los corrreos de la empresa?',
+      result: 'Manera de empezar los correos de la empresa: ',
+    },
+    {
+      question: 'Cual es la manera promedio de terminar los corrreos de la empresa?',
+      result: 'Manera de terminar los correos de la empresa: ',
+    },
+    {
+      question: 'Cual es la pagina web de la empresa?',
+      result: 'Pagina web de la empresa: ',
+    },
+    { question: 'Quien es el CEO de la empresa?', result: 'CEO de la empresa: ' },
+    {
+      question: 'Cual es el acento del idioma de escritura segun el pais de la empresa?',
+      result: 'Acento de idioma: ',
+    },
+  ];
+
+  const request = [];
+  for (const question of questions) {
+    request.push(questionProcess(question.question, namespace));
+  }
+  const responses = await Promise.all(request);
+  let context = '';
+  for (let index = 0; index < questions.length; index++) {
+    context = context + questions[index].result + responses[index] + ', ';
+  }
+  return context;
 };
 
 const chatGPT = (prompt, numberOfChoises) =>

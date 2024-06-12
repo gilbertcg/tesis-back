@@ -8,11 +8,11 @@ const Templates = mongoose.model('Templates');
 const Files = mongoose.model('Files');
 
 const processText = async (req, res) => {
-  const empresa = {
-    context:
-      'Nombre de la empresa: Protos Tech, ubicacion de la empresa: Ciudad de panama, pagina web de la empresa: www.protostech.com',
-  };
   try {
+    const file = await Files.findOne({ clientID: req.client._id }).sort({ createdAt: -1 }).limit(1);
+    if (!file) {
+      return res.status(400).json(errorFormat.set(400, 'Suba un archivo primero para estudiar su comunicacion'));
+    }
     const prompt = `Quiero que actues como un profesional en la comunicacion por
     correos electronicos,
     
@@ -21,11 +21,13 @@ const processText = async (req, res) => {
     texto: ${req.body.text}
     
     El codigo anterior es un mensaje de correo electronico empresarial, cuyo contexto de la empresa es el siguiente.
-
-    contexto empresa: ${empresa.context}
-
-    usa este contexto de la empresa para completar campos que el texto original no tenga
+   
+    contexto empresa: ${file.context}
     
+    usa este contexto de la empresa para completar campos que el texto original no tenga.
+
+    Si en el contexto de la empresa hay informacion de la ubicacion, usala solo para para dar el acento del idioma.
+      
     Ahora quiero que analices el mensaje escrito por el usuario y
     lo modifiques por un mensaje ${req.body.sentiment} y amigable.
     
@@ -48,7 +50,6 @@ const processText = async (req, res) => {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
     const daraParsed = JSON.parse(response.body);
-    console.log(daraParsed);
     if (req.client._id) {
       for (const choise of daraParsed.choices) {
         const template = new Templates({
@@ -155,10 +156,12 @@ const getFiles = async (req, res) => {
 const setPdf = async (req, res) => {
   const pdfPrcessed = await pdf(req.file.buffer);
   const metadata = { source: 'blob', blobType: req.file.mimetype };
-  await langchainController.savePDF(req.client._id, pdfPrcessed, metadata);
+  const context = await langchainController.savePDF(req.client._id, pdfPrcessed, metadata);
+  console.log(context);
   const file = new Files({
     name: req.body.fileName,
     clientID: req.client._id,
+    context,
   });
   await file.save();
   return res.status(200).json({ ok: true });
