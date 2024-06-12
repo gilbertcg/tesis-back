@@ -21,11 +21,14 @@ El codigo anterior es un mensaje de correo electronico.
 Ahora quiero que analices el mensaje escrito por el usuario y
 lo modifiques por un mensaje {sentiment} y amigable.
 
-el siguiente contexto pertenece al manual de comunicacion de la empresa, uselo solo si es necesario
+el siguiente contexto pertenece a una lista de correos electronicos creados previamente por miembros de la empresa, puedes usarlo para sacar informacion
+de la empresa relevante para este correo electronico.
 
 <context>
   {context}
 </context>
+
+
 
 No quiero que agregues marcadores o placeholders al mensaje modificado,
 como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario],
