@@ -39,7 +39,7 @@ No alargues los parrafos nuevos a mas de 100 palabras por parrafo.
 
 Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
 
-De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar.
+De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar, evita escribir textos como previos al mensaje de correo, como "Claro, aquí tienes el mensaje modificado, o Claro, aquí tienes el mensaje".
 `;
 
 const combineDocumentsFn = (docs, separator = '\n\n') => {
