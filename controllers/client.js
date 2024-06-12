@@ -157,14 +157,13 @@ const setPdf = async (req, res) => {
   const pdfPrcessed = await pdf(req.file.buffer);
   const metadata = { source: 'blob', blobType: req.file.mimetype };
   const context = await langchainController.savePDF(req.client._id, pdfPrcessed, metadata);
-  console.log(context);
   const file = new Files({
     name: req.body.fileName,
     clientID: req.client._id,
     context,
   });
   await file.save();
-  return res.status(200).json({ ok: true });
+  return res.status(200).json({ ok: true, file });
 };
 
 module.exports = {
