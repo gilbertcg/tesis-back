@@ -40,9 +40,6 @@ No alargues los parrafos nuevos a mas de 100 palabras por parrafo.
 Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
 
 De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar, evita escribir textos como previos al mensaje de correo, como "Claro, aquí tienes el mensaje modificado, o Claro, aquí tienes el mensaje".
-
-Y ademas dame luego del mensaje el contexto que usaste, si no usaste el contexto escribe "no use contexto"
-
 `;
 
 const combineDocumentsFn = (docs, separator = '\n\n') => {
@@ -56,6 +53,7 @@ const makeChain = retriever => {
   const model = new ChatOpenAI({
     temperature: 0,
     modelName: 'gpt-3.5-turbo',
+    n: 4,
   });
   const standaloneQuestionChain = RunnableSequence.from([condenseQuestionPrompt, model, new StringOutputParser()]);
   const retrievalChain = retriever.pipe(combineDocumentsFn);

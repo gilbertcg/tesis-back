@@ -40,6 +40,7 @@ const processText = async (req, res) => {
       text: req.body.text,
       sentiment: req.body.sentiment || 'formal',
     });
+    console.log(response);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
