@@ -128,7 +128,6 @@ const savePDF = async (namespace, pdfPrcessed, metadata) => {
       question: 'Cual es la pagina web de la empresa?',
       result: 'Pagina web de la empresa: ',
     },
-    { question: 'Quien es el CEO de la empresa?', result: 'CEO de la empresa: ' },
     {
       question: 'Cual es el acento del idioma de escritura segun el pais de la empresa?',
       result: 'Acento de idioma: ',
