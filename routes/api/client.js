@@ -17,5 +17,6 @@ router.get('/client/files', auth.client, auth.loggingIn.required, ClientControll
 router.get('/client/templates', auth.client, auth.loggingIn.required, ClientController.getTemplates);
 router.post('/client/processText', auth.client, auth.loggingIn.required, ClientController.processText);
 router.post('/client/translateText', auth.client, auth.loggingIn.required, ClientController.translateText);
+router.post('/client/resumeText', auth.client, auth.loggingIn.required, ClientController.resumeConversation);
 
 module.exports = router;

@@ -166,10 +166,16 @@ const setPdf = async (req, res) => {
   return res.status(200).json({ ok: true, file });
 };
 
+const resumeConversation = async (req, res) => {
+  const resumen = await langchainController.resumenChain(req.body.text);
+  return res.status(200).json({ ok: true, resumen });
+};
+
 module.exports = {
   processText,
   getTemplates,
   translateText,
   setPdf,
   getFiles,
+  resumeConversation,
 };

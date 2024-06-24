@@ -1,11 +1,12 @@
-const { ChatPromptTemplate } = require('langchain/prompts');
+const { ChatPromptTemplate, PromptTemplate } = require('langchain/prompts');
 const { RunnableSequence } = require('langchain/schema/runnable');
 const { StringOutputParser } = require('langchain/schema/output_parser');
 const { ChatOpenAI } = require('langchain/chat_models/openai');
 const { Document } = require('langchain/document');
-const { RecursiveCharacterTextSplitter } = require('langchain/text_splitter');
+const { RecursiveCharacterTextSplitter, TokenTextSplitter } = require('langchain/text_splitter');
 const { OpenAIEmbeddings } = require('langchain/embeddings/openai');
 const { PineconeStore } = require('langchain/vectorstores/pinecone');
+const { loadSummarizationChain } = require('langchain/chains');
 const { pinecone } = require('../config/pinecone-client');
 const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
 const request = require('request');
@@ -25,6 +26,37 @@ Si no sabe la respuesta, simplemente diga que no la sabe. NO intente inventar un
 
 Pregunta: {question}
 Respuesta útil: `;
+
+const summaryTemplate = `
+Eres un experto en resumir conversaciones de correo electronico.
+Su objetivo es crear un resumen de una conversacion.
+A continuación encontrará la conversacion:
+--------
+{text}
+--------
+
+
+El resultado total será un resumen de la conversacion.
+
+RESUMEN:
+`;
+
+const summaryRefineTemplate = `
+Eres un experto en resumir conversaciones de correo electronico.
+Su objetivo es crear un resumen de una conversacion
+Hemos proporcionado un resumen existente hasta cierto punto: {existing_answer}
+
+A continuación  encontrará la conversacion:
+--------
+{text}
+--------
+
+Dado el nuevo contexto, perfeccione el resumen .
+Si el contexto no es útil, devuelva el resumen.
+El resultado total será un resumen de la conversacion.
+
+RESUMEN:
+`;
 
 const combineDocumentsFn = (docs, separator = '\n\n') => {
   const serializedDocs = docs.map(doc => doc.pageContent);
@@ -56,6 +88,36 @@ const makeChain = retriever => {
     answerChain,
   ]);
   return conversationalRetrievalQAChain;
+};
+
+const resumenChain = async conversation => {
+  const model = new ChatOpenAI({
+    temperature: 0,
+    modelName: 'gpt-3.5-turbo',
+  });
+  try {
+    const splitter = new TokenTextSplitter({
+      chunkSize: 10000,
+      chunkOverlap: 250,
+    });
+    const docsSummary = await splitter.splitDocuments([{ pageContent: conversation, metadata: { loc: null } }]);
+    const SUMMARY_PROMPT = PromptTemplate.fromTemplate(summaryTemplate);
+    const SUMMARY_REFINE_PROMPT = PromptTemplate.fromTemplate(summaryRefineTemplate);
+    const summarizeChain = loadSummarizationChain(model, {
+      type: 'refine',
+      verbose: false,
+      questionPrompt: SUMMARY_PROMPT,
+      refinePrompt: SUMMARY_REFINE_PROMPT,
+    });
+    const inputs = {
+      input_documents: docsSummary.map(doc => ({ pageContent: doc.pageContent })),
+    };
+    const summaries = await summarizeChain.call(inputs);
+    return summaries.output_text;
+  } catch (error) {
+    console.error('Error summarizing conversation:', error);
+    throw error;
+  }
 };
 
 const questionProcess = async (question, namespace) => {
@@ -182,4 +244,5 @@ module.exports = {
   chatGPT,
   questionProcess,
   savePDF,
+  resumenChain,
 };
