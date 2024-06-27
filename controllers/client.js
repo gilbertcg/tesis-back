@@ -188,7 +188,7 @@ const processAudio = async (req, res) => {
         gen_file_txt: false, // outputs .txt file
         gen_file_subtitle: false, // outputs .srt file
         gen_file_vtt: false, // outputs .vtt file
-        word_timestamps: true, // timestamp for every word
+        word_timestamps: false, // timestamp for every word
       },
     };
     const filePath = '/tmp/sample.wav';
