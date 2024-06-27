@@ -1,8 +1,5 @@
 FROM node:19-bullseye
 
-WORKDIR /usr/src/app
-
-# Instalar las herramientas necesarias para la compilación
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3 \
@@ -12,9 +9,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl
 
-# Establecer el directorio de trabajo
 WORKDIR /usr/src/app
-
 
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=cache,target=/root/.npm \ 
