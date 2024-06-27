@@ -11,6 +11,8 @@ USER node
 
 COPY . .
 
+# Crear la carpeta de uploads y establecer permisos
+RUN mkdir -p uploads && chown -R node:node uploads
 
 EXPOSE 3000
 
