@@ -2,17 +2,19 @@ FROM node:19-alpine
 
 WORKDIR /usr/src/app
 
-# Instalar las herramientas necesarias para compilación
-RUN apk add --no-cache \
-    build-base \
+# Instalar las herramientas necesarias para la compilación
+RUN apt-get update && apt-get install -y \
+    build-essential \
     python3 \
-    py3-pip \
+    python3-pip \
     git \
-    cmake
+    cmake \
+    wget \
+    curl
 
+# Establecer el directorio de trabajo
+WORKDIR /usr/src/app
 
-RUN apk update \
-    && apk --no-cache --update add build-base 
 
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=cache,target=/root/.npm \ 
