@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
+const fs = require('fs');
 const whisper = require('whisper-node');
-const tempWrite = require('temp-write');
 
 const errorFormat = require('../functions/errorCode');
 const langchainController = require('./langchain');
@@ -181,9 +181,10 @@ const setPdf = async (req, res) => {
 
 const processAudio = async (req, res) => {
   try {
-    const audioFile = tempWrite.sync(req.file.buffer);
-    console.log(audioFile);
-    const transcript = await whisper(audioFile);
+    const filePath = 'temp/sample.wav';
+    await fs.promises.writeFile(filePath, req.file.buffer); // Ruta del archivo temporal
+    console.log(filePath);
+    const transcript = await whisper(filePath);
     console.log('Transcription: ', transcript);
     return res.status(200).json({ ok: true });
   } catch (err) {
