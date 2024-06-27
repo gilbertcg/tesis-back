@@ -3,6 +3,7 @@ const pdf = require('pdf-parse');
 
 const errorFormat = require('../functions/errorCode');
 const langchainController = require('./langchain');
+const googleSpeechController = require('./google-speechj');
 
 const Templates = mongoose.model('Templates');
 const Files = mongoose.model('Files');
@@ -174,7 +175,15 @@ const setPdf = async (req, res) => {
 };
 
 const processAudio = async (req, res) => {
-  console.log('buffer: ', req.file.buffer);
+  console.log('Archivo recibido:', req.file, req.file.path);
+  try {
+    const transcription = await googleSpeechController.getTextAudio(req.file.path);
+    console.log('Transcription: ', transcription.text);
+    res.send(transcription);
+  } catch (err) {
+    console.error('ERROR:', err);
+    res.status(500).send('Error processing the audio file');
+  }
   return res.status(200).json({ ok: true });
 };
 
