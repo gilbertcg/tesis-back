@@ -181,10 +181,22 @@ const setPdf = async (req, res) => {
 
 const processAudio = async (req, res) => {
   try {
+    const options = {
+      modelName: 'base.en', // default
+      // modelPath: "/custom/path/to/model.bin", // use model in a custom directory (cannot use along with 'modelName')
+      whisperOptions: {
+        language: 'auto', // default (use 'auto' for auto detect)
+        gen_file_txt: false, // outputs .txt file
+        gen_file_subtitle: false, // outputs .srt file
+        gen_file_vtt: false, // outputs .vtt file
+        word_timestamps: true, // timestamp for every word
+        // timestamp_size: 0      // cannot use along with word_timestamps:true
+      },
+    };
     const filePath = '/tmp/sample.wav';
     await fs.promises.writeFile(filePath, req.file.buffer); // Ruta del archivo temporal
     console.log(filePath);
-    const transcript = await whisper(filePath);
+    const transcript = await whisper(filePath, options);
     console.log('Transcription: ', transcript);
     return res.status(200).json({ ok: true });
   } catch (err) {
