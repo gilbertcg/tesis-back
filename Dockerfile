@@ -2,6 +2,9 @@ FROM node:19-alpine
 
 WORKDIR /usr/src/app
 
+RUN apk update \
+    && apk --no-cache --update add build-base 
+
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=cache,target=/root/.npm \ 
     npm i --force
