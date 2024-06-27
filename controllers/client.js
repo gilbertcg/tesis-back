@@ -181,7 +181,7 @@ const setPdf = async (req, res) => {
 
 const processAudio = async (req, res) => {
   try {
-    const filePath = 'temp/sample.wav';
+    const filePath = '/usr/src/app/temp/sample.wav';
     await fs.promises.writeFile(filePath, req.file.buffer); // Ruta del archivo temporal
     console.log(filePath);
     const transcript = await whisper(filePath);
