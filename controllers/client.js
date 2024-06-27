@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
+const whisper = require('whisper-node');
 
 const errorFormat = require('../functions/errorCode');
 const langchainController = require('./langchain');
-const googleSpeechController = require('./google-speechj');
 
 const Templates = mongoose.model('Templates');
 const Files = mongoose.model('Files');
@@ -14,38 +14,7 @@ const processText = async (req, res) => {
     if (!file) {
       return res.status(400).json(errorFormat.set(400, 'Suba un archivo primero para estudiar su comunicacion'));
     }
-    const prompt = `Quiero que actues como un profesional en la comunicacion por
-    correos electronicos,
-    
-    A continuacion te voy a dar el siguiente texto: 
-    
-    texto: ${req.body.text}
-    
-    El codigo anterior es un mensaje de correo electronico empresarial, cuyo contexto de la empresa es el siguiente.
-   
-    contexto empresa: ${file.context}
-    
-    usa este contexto de la empresa para completar campos que el texto original no tenga.
-
-    Si en el contexto de la empresa hay informacion de la ubicacion, usala solo para para dar el acento del idioma.
-      
-    Ahora quiero que analices el mensaje escrito por el usuario y
-    lo modifiques por un mensaje ${req.body.sentiment} y amigable.
-    
-    No quiero que agregues marcadores o placeholders al mensaje modificado,
-    como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario],
-    [Nombre del destinatario], o cualquier campo que tenga que se llenado por 
-    el usuario.
-    
-    Tampoco quiero que te refieras al destinatario como usuario o destinatario, 
-    evita usar oraciones donde tengas que agregar eso.
-    
-    No alargues los parrafos nuevos a mas de 100 palabras por parrafo. 
-    
-    Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
-    
-    De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar, evita escribir textos como previos al mensaje de correo, como "Claro, aquí tienes el mensaje modificado, o Claro, aquí tienes el mensaje".
-    `;
+    const prompt = generatePrompt(req.body.text, file.context, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
@@ -117,6 +86,41 @@ const translateText = async (req, res) => {
   }
 };
 
+function generatePrompt(text, context, sentiment) {
+  return `Quiero que actues como un profesional en la comunicacion por
+  correos electronicos,
+  
+  A continuacion te voy a dar el siguiente texto: 
+  
+  texto: ${text}
+  
+  El codigo anterior es un mensaje de correo electronico empresarial, cuyo contexto de la empresa es el siguiente.
+ 
+  contexto empresa: ${context}
+  
+  usa este contexto de la empresa para completar campos que el texto original no tenga.
+
+  Si en el contexto de la empresa hay informacion de la ubicacion, usala solo para para dar el acento del idioma.
+    
+  Ahora quiero que analices el mensaje escrito por el usuario y
+  lo modifiques por un mensaje ${sentiment} y amigable.
+  
+  No quiero que agregues marcadores o placeholders al mensaje modificado,
+  como por ejemplo [tu nombre], [Información de contacto adicional, si es necesario],
+  [Nombre del destinatario], o cualquier campo que tenga que se llenado por 
+  el usuario.
+  
+  Tampoco quiero que te refieras al destinatario como usuario o destinatario, 
+  evita usar oraciones donde tengas que agregar eso.
+  
+  No alargues los parrafos nuevos a mas de 100 palabras por parrafo. 
+  
+  Si el texto que te pase es corto, no generes un texto que sea el triple de largo.
+  
+  De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar, evita escribir textos como previos al mensaje de correo, como "Claro, aquí tienes el mensaje modificado, o Claro, aquí tienes el mensaje".
+  `;
+}
+
 const getTemplates = async (req, res) => {
   let page = 1;
   let limit = 10;
@@ -175,11 +179,10 @@ const setPdf = async (req, res) => {
 };
 
 const processAudio = async (req, res) => {
-  console.log('Archivo recibido:', req.file, req.file.path);
   try {
-    const transcription = await googleSpeechController.getTextAudio(req.file.path);
-    console.log('Transcription: ', transcription.text);
-    res.send(transcription);
+    const transcript = await whisper.transcribe(req.file.buffer);
+    console.log('Transcription: ', transcript);
+    return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('ERROR:', err);
     res.status(500).send('Error processing the audio file');

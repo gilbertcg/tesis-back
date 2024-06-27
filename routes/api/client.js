@@ -1,26 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const fs = require('fs');
+const upload = multer();
 
 const auth = require('../../routes/auth');
 
 const ClientController = require('../../controllers/client');
 const AuthController = require('../../controllers/auth');
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-const upload = multer({ storage });
-
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
-}
 
 // client routes
 router.get('/client/me', auth.client, auth.loggingIn.required, AuthController.getClient);
