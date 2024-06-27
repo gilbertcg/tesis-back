@@ -174,7 +174,7 @@ const setPdf = async (req, res) => {
 };
 
 const processAudio = async (req, res) => {
-  console.log(req.file.buffer);
+  console.log('buffer: ', req.file.buffer);
   return res.status(200).json({ ok: true });
 };
 
