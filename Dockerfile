@@ -17,6 +17,8 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     
 RUN npm install --global whisper-node
 
+RUN npx whisper-node download
+
 COPY . .
 
 EXPOSE 3000
