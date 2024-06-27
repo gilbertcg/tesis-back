@@ -40,7 +40,6 @@
   "main": "app.js",
   "name": "backend",
   "scripts": {
-    "start": "node ./app.js",
     "dev": "nodemon ./app.js",
     "docker:dev": "docker run -p 3000:3000 back-tesis:latest",
     "format": "prettier --write {,*/**/}*.{ts,js,jsx,json}",

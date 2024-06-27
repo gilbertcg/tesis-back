@@ -187,7 +187,6 @@ const processAudio = async (req, res) => {
     console.error('ERROR:', err);
     res.status(500).send('Error processing the audio file');
   }
-  return res.status(200).json({ ok: true });
 };
 
 const resumeConversation = async (req, res) => {
