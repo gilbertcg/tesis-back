@@ -193,7 +193,8 @@ const processAudio = async (req, res) => {
     };
     const filePath = '/tmp/sample.wav';
     await fs.promises.writeFile(filePath, req.file.buffer); // Ruta del archivo temporal
-    console.log(filePath);
+    const fileContent = await fs.promises.readFile(filePath, 'binary');
+    console.log('File Content: ', fileContent);
     const transcript = await whisper(filePath, options);
     console.log('Transcription: ', transcript);
     return res.status(200).json({ ok: true });
