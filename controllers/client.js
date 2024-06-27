@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
 const fs = require('fs');
-const whisper = require('whisper-node');
+const { whisper } = require('whisper-node');
 
 const errorFormat = require('../functions/errorCode');
 const langchainController = require('./langchain');
