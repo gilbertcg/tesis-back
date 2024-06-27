@@ -18,5 +18,12 @@ router.get('/client/templates', auth.client, auth.loggingIn.required, ClientCont
 router.post('/client/processText', auth.client, auth.loggingIn.required, ClientController.processText);
 router.post('/client/translateText', auth.client, auth.loggingIn.required, ClientController.translateText);
 router.post('/client/resumeText', auth.client, auth.loggingIn.required, ClientController.resumeConversation);
+router.post(
+  '/client/processAudio',
+  auth.client,
+  auth.loggingIn.required,
+  upload.single('audio'),
+  ClientController.processAudio,
+);
 
 module.exports = router;

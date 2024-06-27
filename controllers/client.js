@@ -60,7 +60,14 @@ const processText = async (req, res) => {
         template.save();
       }
     }
-    return res.status(200).json({ choises: daraParsed.choices });
+    const meetLink = await langchainController.calendarChain(req.body.text);
+    console.log('respuesta: ', meetLink);
+    if (meetLink === 'N/A') {
+      return res.status(200).json({ choises: daraParsed.choices });
+    } else {
+      console.log('procesa respuesta: ', meetLink);
+      return res.status(200).json({ choises: daraParsed.choices });
+    }
   } catch (error) {
     console.log(error);
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
@@ -166,6 +173,11 @@ const setPdf = async (req, res) => {
   return res.status(200).json({ ok: true, file });
 };
 
+const processAudio = async (req, res) => {
+  console.log(req.file.buffer);
+  return res.status(200).json({ ok: true });
+};
+
 const resumeConversation = async (req, res) => {
   const resumen = await langchainController.resumenChain(req.body.text);
   return res.status(200).json({ ok: true, resumen });
@@ -178,4 +190,5 @@ module.exports = {
   setPdf,
   getFiles,
   resumeConversation,
+  processAudio,
 };

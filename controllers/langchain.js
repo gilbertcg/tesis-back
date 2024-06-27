@@ -6,6 +6,8 @@ const { Document } = require('langchain/document');
 const { RecursiveCharacterTextSplitter, TokenTextSplitter } = require('langchain/text_splitter');
 const { OpenAIEmbeddings } = require('langchain/embeddings/openai');
 const { PineconeStore } = require('langchain/vectorstores/pinecone');
+const { initializeAgentExecutorWithOptions } = require('langchain/agents');
+const { GoogleCalendarCreateTool } = require('@langchain/community/tools/google_calendar');
 const { loadSummarizationChain } = require('langchain/chains');
 const { pinecone } = require('../config/pinecone-client');
 const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
@@ -116,6 +118,52 @@ const resumenChain = async conversation => {
     return summaries.output_text;
   } catch (error) {
     console.error('Error summarizing conversation:', error);
+    throw error;
+  }
+};
+
+const calendarChain = async message => {
+  try {
+    const model = new ChatOpenAI({
+      temperature: 0,
+      modelName: 'gpt-3.5-turbo',
+    });
+    const googleCalendarParams = {
+      credentials: {
+        clientEmail: process.env.GOOGLE_CALENDAR_CLIENT_EMAIL,
+        privateKey: process.env.GOOGLE_CALENDAR_PRIVATE_KEY,
+        calendarId: process.env.GOOGLE_CALENDAR_CALENDAR_ID,
+      },
+      scopes: ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events'],
+      model,
+    };
+    const tools = [new GoogleCalendarCreateTool(googleCalendarParams)];
+    const calendarAgent = await initializeAgentExecutorWithOptions(tools, model, {
+      agentType: 'zero-shot-react-description',
+      verbose: false,
+    });
+    const meetingInput = await calendarAgent.invoke({
+      input: 'Create a meeting with Paola Carvallo at 4pm tomorrow, if you cannot create the meet return N/A',
+    });
+    console.log(meetingInput);
+    if (meetingInput && meetingInput.output) {
+      if (meetingInput.output === 'N/A') {
+        return 'N/A';
+      }
+      const originalMessage = meetingInput.output;
+      const meetingDescription = 'Reunion programada';
+      const createMeetingInput = `Crear una reunión para: ${meetingDescription}. Enlace al mensaje original: ${originalMessage}`;
+      const createMeetingResult = await calendarAgent.invoke({ input: createMeetingInput });
+      if (createMeetingResult && createMeetingResult.output) {
+        return createMeetingResult.output;
+      } else {
+        return message;
+      }
+    } else {
+      return message;
+    }
+  } catch (error) {
+    console.error('Error calendar conversation:', error);
     throw error;
   }
 };
@@ -241,4 +289,5 @@ module.exports = {
   questionProcess,
   savePDF,
   resumenChain,
+  calendarChain,
 };
