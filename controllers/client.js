@@ -183,7 +183,7 @@ const processAudio = async (req, res) => {
   try {
     const filePath = '/tmp/sample.wav';
     await fs.promises.writeFile(filePath, req.file.buffer); // Ruta del archivo temporal
-    exec(`python transcriber.py ${filePath}`, (error, stdout, stderr) => {
+    exec(`python ../transcriber.py ${filePath}`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error ejecutando el script: ${error.message}`);
         return res.status(500).send('Error procesando el archivo de audio');

@@ -8,6 +8,10 @@ RUN apt-get update && apt-get install -y \
     cmake \
     wget \
     curl
+    
+RUN pip install --upgrade pip && \
+    pip install wheel && \
+    pip install numpy  # Agrega las dependencias de Python necesarias aquí
 
 WORKDIR /usr/src/app
 
