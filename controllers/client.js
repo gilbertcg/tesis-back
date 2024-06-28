@@ -177,7 +177,7 @@ const setPdf = async (req, res) => {
 
 const processAudio = async (req, res) => {
   try {
-    const transcription = await googleSpeechController.transcribeAudioByFile('./test1.mp3');
+    const transcription = await googleSpeechController.transcribeAudio(req.file);
     console.log(transcription);
     const prompt = generatePrompt('hola nos reunimos manana?', null, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
