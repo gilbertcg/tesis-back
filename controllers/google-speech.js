@@ -1,19 +1,18 @@
 const speech = require('@google-cloud/speech');
-const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
-
 process.env.GOOGLE_APPLICATION_CREDENTIALS = './google-keys.json';
-async function transcribeAudio(buffer) {
+async function transcribeAudioByFile(audiofile) {
   try {
     const speechClient = new speech.SpeechClient();
-    const audioByte = buffer.toString('base64');
+    const file = fs.readFileSync(audiofile);
+    const audioByte = file.toString('base64');
     const audio = {
       content: audioByte,
     };
     const config = {
       encoding: 'LINEAR16',
       // sampleRateHertz: 44100,
-      languageCode: 'en-US',
+      languageCode: 'es-ES',
     };
     return new Promise((resolve, reject) => {
       speechClient
@@ -30,25 +29,34 @@ async function transcribeAudio(buffer) {
   }
 }
 
-const getAudioDuration = buffer => {
-  return new Promise((resolve, reject) => {
-    const tempFilePath = '/tmp/temp-audio-file';
-    fs.promises
-      .writeFile(tempFilePath, buffer)
-      .then(() => {
-        ffmpeg.ffprobe(tempFilePath, (err, metadata) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(metadata.format.duration);
-          }
+async function transcribeAudioByBuffer(buffer) {
+  try {
+    const speechClient = new speech.SpeechClient();
+    const audioByte = buffer.toString('base64');
+    const audio = {
+      content: audioByte,
+    };
+    const config = {
+      encoding: 'LINEAR16',
+      // sampleRateHertz: 44100,
+      languageCode: 'es-ES',
+    };
+    return new Promise((resolve, reject) => {
+      speechClient
+        .recognize({ audio, config })
+        .then(data => {
+          resolve(data);
+        })
+        .catch(err => {
+          reject(err);
         });
-      })
-      .catch(err => reject(err));
-  });
-};
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 module.exports = {
-  transcribeAudio,
-  getAudioDuration,
+  transcribeAudioByFile,
+  transcribeAudioByBuffer,
 };

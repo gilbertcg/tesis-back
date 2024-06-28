@@ -177,11 +177,7 @@ const setPdf = async (req, res) => {
 
 const processAudio = async (req, res) => {
   try {
-    // Obtener la duración del audio
-    const duration = await googleSpeechController.getAudioDuration(req.file.buffer);
-    console.log(`La duración del audio es ${duration} segundos`);
-
-    const transcription = await googleSpeechController.transcribeAudio(req.file.buffer);
+    const transcription = await googleSpeechController.transcribeAudioByFile('/test1.mp3');
     console.log(transcription);
     console.log(transcription[0].results.map(r => r.alternatives[0].transcript).join('\n'));
     const prompt = generatePrompt('hola nos reunimos manana?', null, req.body.sentiment);
