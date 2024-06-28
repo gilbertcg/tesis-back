@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
-const fs = require('fs');
-// const { exec } = require('child_process');
 
 const errorFormat = require('../functions/errorCode');
 const langchainController = require('./langchain');
@@ -179,6 +177,10 @@ const setPdf = async (req, res) => {
 
 const processAudio = async (req, res) => {
   try {
+    // Obtener la duración del audio
+    const duration = await googleSpeechController.getAudioDuration(req.file.buffer);
+    console.log(`La duración del audio es ${duration} segundos`);
+
     const transcription = await googleSpeechController.transcribeAudio(req.file.buffer);
     console.log(transcription);
     console.log(transcription[0].results.map(r => r.alternatives[0].transcript).join('\n'));
