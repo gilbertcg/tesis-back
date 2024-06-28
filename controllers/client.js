@@ -181,7 +181,7 @@ const processAudio = async (req, res) => {
   try {
     const filePath = '/tmp/sample.wav';
     await fs.promises.writeFile(filePath, req.file.buffer);
-    const transcription = await googleSpeechController.transcribeAudio('./voip.wav');
+    const transcription = await googleSpeechController.transcribeAudio('voip.wav');
     console.log(transcription);
     console.log(transcription[0].results.map(r => r.alternatives[0].transcript).join('\n'));
     const prompt = generatePrompt('hola nos reunimos manana?', null, req.body.sentiment);
