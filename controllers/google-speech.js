@@ -1,11 +1,9 @@
 const speech = require('@google-cloud/speech');
-const fs = require('fs');
 process.env.GOOGLE_APPLICATION_CREDENTIALS = './google-keys.json';
-async function transcribeAudio(audiofile) {
+async function transcribeAudio(buffer) {
   try {
     const speechClient = new speech.SpeechClient();
-    const file = fs.readFileSync(audiofile);
-    const audioByte = file.toString('base64');
+    const audioByte = buffer.toString('base64');
     const audio = {
       content: audioByte,
     };

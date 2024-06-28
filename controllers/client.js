@@ -179,10 +179,7 @@ const setPdf = async (req, res) => {
 
 const processAudio = async (req, res) => {
   try {
-    const filePath = '/tmp/sample.wav';
-    await fs.promises.writeFile(filePath, req.file.buffer);
-    console.log(filePath);
-    const transcription = await googleSpeechController.transcribeAudio('./voip.wav');
+    const transcription = await googleSpeechController.transcribeAudio(req.file.buffer);
     console.log(transcription);
     console.log(transcription[0].results.map(r => r.alternatives[0].transcript).join('\n'));
     const prompt = generatePrompt('hola nos reunimos manana?', null, req.body.sentiment);
@@ -193,19 +190,6 @@ const processAudio = async (req, res) => {
     const daraParsed = JSON.parse(response.body);
     saveChoises(req.client, req.body.text, daraParsed);
     return res.status(200).json({ choises: daraParsed.choices });
-    // exec(`python ../transcriber.py ${filePath}`, (error, stdout, stderr) => {
-    //   if (error) {
-    //     console.error(`Error ejecutando el script: ${error.message}`);
-    //     return res.status(500).send('Error procesando el archivo de audio');
-    //   }
-    //   if (stderr) {
-    //     console.error(`Error en el script: ${stderr}`);
-    //     return res.status(500).send('Error procesando el archivo de audio');
-    //   }
-    //   console.log('Transcripción:', stdout);
-    //   // res.send(stdout.trim()); // Quitamos posibles saltos de línea finales
-    //   return res.status(200).json({ ok: true });
-    // });
   } catch (err) {
     console.error('ERROR:', err);
     res.status(500).send('Error processing the audio file');
