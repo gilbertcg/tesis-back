@@ -15,9 +15,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=cache,target=/root/.npm \ 
     npm i --force
     
-RUN npm install --global whisper-node
-
-RUN npx whisper-node download
+RUN pip install openai-whisper
 
 COPY . .
 

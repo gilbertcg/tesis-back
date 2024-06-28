@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const pdf = require('pdf-parse');
 const fs = require('fs');
-const { whisper } = require('whisper-node');
+const { exec } = require('child_process');
 
 const errorFormat = require('../functions/errorCode');
 const langchainController = require('./langchain');
@@ -181,23 +181,21 @@ const setPdf = async (req, res) => {
 
 const processAudio = async (req, res) => {
   try {
-    const options = {
-      modelName: 'base', // default
-      whisperOptions: {
-        language: 'auto', // default (use 'auto' for auto detect)
-        gen_file_txt: false, // outputs .txt file
-        gen_file_subtitle: false, // outputs .srt file
-        gen_file_vtt: false, // outputs .vtt file
-        word_timestamps: false, // timestamp for every word
-      },
-    };
     const filePath = '/tmp/sample.wav';
     await fs.promises.writeFile(filePath, req.file.buffer); // Ruta del archivo temporal
-    const fileContent = await fs.promises.readFile(filePath, 'binary');
-    console.log('File Content: ', fileContent);
-    const transcript = await whisper(filePath, options);
-    console.log('Transcription: ', transcript);
-    return res.status(200).json({ ok: true });
+    exec(`python transcriber.py ${filePath}`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error ejecutando el script: ${error.message}`);
+        return res.status(500).send('Error procesando el archivo de audio');
+      }
+      if (stderr) {
+        console.error(`Error en el script: ${stderr}`);
+        return res.status(500).send('Error procesando el archivo de audio');
+      }
+      console.log('Transcripción:', stdout);
+      // res.send(stdout.trim()); // Quitamos posibles saltos de línea finales
+      return res.status(200).json({ ok: true });
+    });
   } catch (err) {
     console.error('ERROR:', err);
     res.status(500).send('Error processing the audio file');
