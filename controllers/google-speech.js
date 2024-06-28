@@ -12,7 +12,7 @@ async function transcribeAudio(audiofile) {
     const config = {
       encoding: 'LINEAR16',
       // sampleRateHertz: 44100,
-      languageCode: 'es-ES',
+      languageCode: 'en-US',
     };
     return new Promise((resolve, reject) => {
       speechClient
