@@ -178,8 +178,10 @@ const setPdf = async (req, res) => {
 const processAudio = async (req, res) => {
   try {
     const transcription = await googleSpeechController.transcribeAudio(req.file);
-    console.log(transcription);
-    const prompt = generatePrompt('hola nos reunimos manana?', null, req.body.sentiment);
+    if (!transcription.text) {
+      return res.status(400).json(errorFormat.set(400, 'Error in transcription'));
+    }
+    const prompt = generatePrompt(transcription.text, null, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
