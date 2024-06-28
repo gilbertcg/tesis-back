@@ -6,6 +6,7 @@ const config = {
   encoding: 'LINEAR16', // Cambia esto según el tipo de archivo si no es LINEAR16
   languageCode: 'es', // 'es-ES' para español especificando España
   enableAutomaticPunctuation: true,
+  sampleRateHertz: 44100, // Audio sample rate in Hertz (change if needed).
   model: 'default', // Puedes especificar otro modelo si es necesario
 };
 
