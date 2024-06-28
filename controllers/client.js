@@ -9,6 +9,19 @@ const langchainController = require('./langchain');
 const Templates = mongoose.model('Templates');
 const Files = mongoose.model('Files');
 
+function saveChoises(client, original, daraParsed) {
+  if (client._id) {
+    for (const choise of daraParsed.choices) {
+      const template = new Templates({
+        original: original,
+        procesed: choise.message.content,
+        clientID: client._id,
+      });
+      template.save();
+    }
+  }
+}
+
 const processText = async (req, res) => {
   try {
     const file = await Files.findOne({ clientID: req.client._id }).sort({ createdAt: -1 }).limit(1);
@@ -21,24 +34,8 @@ const processText = async (req, res) => {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
     const daraParsed = JSON.parse(response.body);
-    if (req.client._id) {
-      for (const choise of daraParsed.choices) {
-        const template = new Templates({
-          original: req.body.text,
-          procesed: choise.message.content,
-          clientID: req.client._id,
-        });
-        template.save();
-      }
-    }
-    const meetLink = await langchainController.calendarChain(req.body.text);
-    console.log('respuesta: ', meetLink);
-    if (meetLink === 'N/A') {
-      return res.status(200).json({ choises: daraParsed.choices });
-    } else {
-      console.log('procesa respuesta: ', meetLink);
-      return res.status(200).json({ choises: daraParsed.choices });
-    }
+    saveChoises(req.client, req.body.text, daraParsed);
+    return res.status(200).json({ choises: daraParsed.choices });
   } catch (error) {
     console.log(error);
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
@@ -182,8 +179,16 @@ const setPdf = async (req, res) => {
 const processAudio = async (req, res) => {
   try {
     const filePath = '/tmp/sample.wav';
-    await fs.promises.writeFile(filePath, req.file.buffer); // Ruta del archivo temporal
-    return res.status(200).json({ ok: true });
+    await fs.promises.writeFile(filePath, req.file.buffer);
+    console.log(req.body);
+    const prompt = generatePrompt('hola nos reunimos manana?', null, req.body.sentiment);
+    const response = await langchainController.chatGPT(prompt, 4);
+    if (!response) {
+      return res.status(400).json(errorFormat.set(400, 'Error in system'));
+    }
+    const daraParsed = JSON.parse(response.body);
+    saveChoises(req.client, req.body.text, daraParsed);
+    return res.status(200).json({ choises: daraParsed.choices });
     // exec(`python ../transcriber.py ${filePath}`, (error, stdout, stderr) => {
     //   if (error) {
     //     console.error(`Error ejecutando el script: ${error.message}`);
