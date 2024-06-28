@@ -1,17 +1,8 @@
 FROM node:19-bullseye
-
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    python3 \
-    python3-pip \
-    git \
-    cmake \
-    wget \
-    curl
     
 RUN pip install --upgrade pip && \
     pip install wheel && \
-    pip install numpy  # Agrega las dependencias de Python necesarias aquí
+    pip install numpy
 
 WORKDIR /usr/src/app
 

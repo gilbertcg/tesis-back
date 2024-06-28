@@ -9,17 +9,17 @@ services:
     ports:
       - '3300:3300'
 #    network_mode: host
-    volumes:
-      - ~/docker-data/whisper.cpp/:/usr/src/app/node_modules/whisper-node/lib/whisper.cpp/
+# volumes:
+#   - ~/docker-data/whisper.cpp/:/usr/src/app/node_modules/whisper-node/lib/whisper.cpp/
 
-  mongodb:
-    image : mongo:3.6.3
-    container_name: mongodb
-    environment:
-    - PUID=1000
-    - PGID=1000
-    volumes:
-    - ~/docker-data/mongo-data:/data/db
-    ports:
-    - 27018:27017
-    restart: unless-stopped
+# mongodb:
+#   image : mongo:3.6.3
+#   container_name: mongodb
+#   environment:
+#   - PUID=1000
+#   - PGID=1000
+#   volumes:
+#   - ~/docker-data/mongo-data:/data/db
+#   ports:
+#   - 27018:27017
+#   restart: unless-stopped
