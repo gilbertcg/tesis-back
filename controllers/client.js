@@ -5,6 +5,7 @@ const fs = require('fs');
 
 const errorFormat = require('../functions/errorCode');
 const langchainController = require('./langchain');
+const googleSpeechController = require('./google-speech');
 
 const Templates = mongoose.model('Templates');
 const Files = mongoose.model('Files');
@@ -180,7 +181,8 @@ const processAudio = async (req, res) => {
   try {
     const filePath = '/tmp/sample.wav';
     await fs.promises.writeFile(filePath, req.file.buffer);
-    console.log(req.body);
+    const transcription = await googleSpeechController.transcribeAudio(filePath);
+    console.log(transcription);
     const prompt = generatePrompt('hola nos reunimos manana?', null, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
     if (!response) {
