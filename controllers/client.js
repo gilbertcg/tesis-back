@@ -24,7 +24,11 @@ function saveChoises(client, original, daraParsed) {
 const processText = async (req, res) => {
   try {
     const file = await Files.findOne({ clientID: req.client._id }).sort({ createdAt: -1 }).limit(1);
-    const prompt = generatePrompt(req.body.text, file.context, req.body.sentiment);
+    let context = null;
+    if (file) {
+      context = file.context;
+    }
+    const prompt = generatePrompt(req.body.text, context, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
