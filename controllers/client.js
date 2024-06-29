@@ -24,9 +24,6 @@ function saveChoises(client, original, daraParsed) {
 const processText = async (req, res) => {
   try {
     const file = await Files.findOne({ clientID: req.client._id }).sort({ createdAt: -1 }).limit(1);
-    if (!file) {
-      return res.status(400).json(errorFormat.set(400, 'Suba un archivo primero para estudiar su comunicacion'));
-    }
     const prompt = generatePrompt(req.body.text, file.context, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
     if (!response) {
@@ -83,6 +80,13 @@ const translateText = async (req, res) => {
   }
 };
 
+// El codigo anterior es un mensaje de correo electronico empresarial, cuyo contexto de la empresa es el siguiente.
+
+// contexto empresa: ${context}
+
+//  usa este contexto de la empresa para completar campos que el texto original no tenga.
+
+//  Si en el contexto de la empresa hay informacion de la ubicacion, usala solo para para dar el acento del idioma.
 function generatePrompt(text, context, sentiment) {
   return `Quiero que actues como un profesional en la comunicacion por
   correos electronicos,
@@ -91,14 +95,6 @@ function generatePrompt(text, context, sentiment) {
   
   texto: ${text}
   
-  El codigo anterior es un mensaje de correo electronico empresarial, cuyo contexto de la empresa es el siguiente.
- 
-  contexto empresa: ${context}
-  
-  usa este contexto de la empresa para completar campos que el texto original no tenga.
-
-  Si en el contexto de la empresa hay informacion de la ubicacion, usala solo para para dar el acento del idioma.
-    
   Ahora quiero que analices el mensaje escrito por el usuario y
   lo modifiques por un mensaje ${sentiment} y amigable.
   
