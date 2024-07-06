@@ -43,9 +43,6 @@ const processText = async (req, res) => {
 };
 
 const translateText = async (req, res) => {
-  if (req.body.text.lenght > 3000) {
-    return res.status(400).json(errorFormat.set(400, 'text to long', ''));
-  }
   try {
     const prompt = `
     Quiero que actues como un profesional en la traduccion de idiomas,
