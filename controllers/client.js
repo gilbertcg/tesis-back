@@ -64,6 +64,7 @@ const translateText = async (req, res) => {
     `;
     const response = await langchainController.chatGPT(prompt, 1);
     if (!response) {
+      console.log('error en chatgpt');
       return res.status(400).json(errorFormat.set(400, 'Error in system'));
     }
     const daraParsed = JSON.parse(response.body);
@@ -77,6 +78,7 @@ const translateText = async (req, res) => {
     }
     return res.status(200).json({ translation: [0].message.content });
   } catch (error) {
+    console.log(error);
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
   }
 };
