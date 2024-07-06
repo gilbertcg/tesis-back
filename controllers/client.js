@@ -64,19 +64,11 @@ const translateText = async (req, res) => {
     `;
     const response = await langchainController.chatGPT(prompt, 1);
     if (!response) {
-      console.log('error en chatgpt');
-      return res.status(400).json(errorFormat.set(400, 'Error in system'));
+      return res.status(400).json(errorFormat.set(400, 'Error in gpt'));
     }
-    const daraParsed = JSON.parse(response.body);
-    if (req.client._id) {
-      const template = new Templates({
-        original: req.body.text,
-        procesed: daraParsed.choices[0].message.content,
-        clientID: req.client._id,
-      });
-      template.save();
-    }
-    return res.status(200).json({ translation: [0].message.content });
+    const dataParsed = JSON.parse(response.body);
+    saveChoises(req.client, req.body.text, dataParsed);
+    return res.status(200).json({ translation: dataParsed.choices[0].message.content });
   } catch (error) {
     console.log(error);
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
