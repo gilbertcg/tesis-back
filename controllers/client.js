@@ -25,12 +25,11 @@ const processText = async (req, res) => {
   try {
     const prompt = generatePrompt(req.body.text, req.client, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
-    if (!response) {
-      return res.status(400).json(errorFormat.set(400, 'Error in system'));
-    }
-    const daraParsed = JSON.parse(response.body);
-    saveChoises(req.client, req.body.text, daraParsed);
-    return res.status(200).json({ choises: daraParsed.choices });
+    if (!response) return res.status(400).json(errorFormat.set(400, 'Error in system'));
+    const dataParsed = JSON.parse(response.body);
+    console.log(dataParsed);
+    saveChoises(req.client, req.body.text, dataParsed);
+    return res.status(200).json({ choises: dataParsed.choices });
   } catch (error) {
     console.log(error);
     return res.status(400).json(errorFormat.set(400, 'Error in system', error));
@@ -173,17 +172,13 @@ const setPdf = async (req, res) => {
 const processAudio = async (req, res) => {
   try {
     const transcription = await googleSpeechController.transcribeAudio(req.file);
-    if (!transcription.text) {
-      return res.status(400).json(errorFormat.set(400, 'Error in transcription'));
-    }
+    if (!transcription.text) return res.status(400).json(errorFormat.set(400, 'Error in transcription'));
     const prompt = generatePrompt(transcription.text, req.client, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
-    if (!response) {
-      return res.status(400).json(errorFormat.set(400, 'Error in system'));
-    }
-    const daraParsed = JSON.parse(response.body);
-    saveChoises(req.client, req.body.text, daraParsed);
-    return res.status(200).json({ choises: daraParsed.choices });
+    if (!response) return res.status(400).json(errorFormat.set(400, 'Error in system'));
+    const dataParsed = JSON.parse(response.body);
+    saveChoises(req.client, req.body.text, dataParsed);
+    return res.status(200).json({ choises: dataParsed.choices });
   } catch (err) {
     console.error('ERROR:', err);
     res.status(500).send('Error processing the audio file');
