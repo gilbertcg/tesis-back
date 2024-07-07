@@ -102,8 +102,15 @@ async function generatePrompt(text, client, sentiment) {
   `;
 
   if (file) {
-    mensaje = mensaje + `Quiero que inicies el correo de esta forma: ${file.startEmails}`;
-    mensaje = mensaje + `Quiero que finalices el correo de esta forma: ${file.endEmails}`;
+    mensaje =
+      mensaje +
+      `Aqui te explico como suelen iniciar los correos de la empresa: " ${file.startEmails} "
+      Quiero que incies el correo de esa forma.
+    `;
+    mensaje =
+      mensaje +
+      `Aqui te explico como suelen finalizar los correos de la empresa: " ${file.endEmails} "
+    Quiero que incies el correo de esa forma.`;
     mensaje =
       mensaje +
       `Si es necesiario completar con el nombre de la empresa, usa este nombre de empresa: ${file.nameEnterprise}`;
