@@ -23,11 +23,10 @@ function saveChoises(client, original, daraParsed) {
 
 const processText = async (req, res) => {
   try {
-    const prompt = generatePrompt(req.body.text, req.client, req.body.sentiment);
+    const prompt = await generatePrompt(req.body.text, req.client, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
     if (!response) return res.status(400).json(errorFormat.set(400, 'Error in system'));
     const dataParsed = JSON.parse(response.body);
-    console.log(dataParsed);
     saveChoises(req.client, req.body.text, dataParsed);
     return res.status(200).json({ choises: dataParsed.choices });
   } catch (error) {
@@ -78,8 +77,7 @@ const translateText = async (req, res) => {
 //  Si en el contexto de la empresa hay informacion de la ubicacion, usala solo para para dar el acento del idioma.
 async function generatePrompt(text, client, sentiment) {
   const file = await Files.findOne({ clientID: client._id }).sort({ createdAt: -1 }).limit(1);
-  console.log(file);
-  let prompt = `Quiero que actues como un profesional en la comunicacion por
+  let mensaje = `Quiero que actues como un profesional en la comunicacion por
   correos electronicos,
   
   A continuacion te voy a dar el siguiente texto: 
@@ -103,11 +101,10 @@ async function generatePrompt(text, client, sentiment) {
   
   `;
 
-  prompt =
-    prompt +
-    `
-  De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar, evita escribir textos como previos al mensaje de correo, como "Claro, aquí tienes el mensaje modificado, o Claro, aquí tienes el mensaje".`;
-  return prompt;
+  mensaje =
+    mensaje +
+    'De resultado quiero que devuelvas un texto plano del correo electronico que voy a enviar, evita escribir textos como previos al mensaje de correo, como "Claro, aquí tienes el mensaje modificado, o Claro, aquí tienes el mensaje".';
+  return mensaje;
 }
 
 const getTemplates = async (req, res) => {
@@ -173,7 +170,7 @@ const processAudio = async (req, res) => {
   try {
     const transcription = await googleSpeechController.transcribeAudio(req.file);
     if (!transcription.text) return res.status(400).json(errorFormat.set(400, 'Error in transcription'));
-    const prompt = generatePrompt(transcription.text, req.client, req.body.sentiment);
+    const prompt = await generatePrompt(transcription.text, req.client, req.body.sentiment);
     const response = await langchainController.chatGPT(prompt, 4);
     if (!response) return res.status(400).json(errorFormat.set(400, 'Error in system'));
     const dataParsed = JSON.parse(response.body);
