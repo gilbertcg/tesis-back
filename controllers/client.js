@@ -160,7 +160,9 @@ const setPdf = async (req, res) => {
   const file = new Files({
     name: req.body.fileName,
     clientID: req.client._id,
-    context,
+    nameEnterprise: context.nameEnterprise,
+    endEmails: context.endEmails,
+    startEmails: context.startEmails,
   });
   await file.save();
   return res.status(200).json({ ok: true, file });

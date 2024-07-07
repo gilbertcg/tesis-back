@@ -10,7 +10,13 @@ const FilesSchema = new mongoose.Schema(
     name: {
       type: String,
     },
-    context: {
+    endEmails: {
+      type: String,
+    },
+    startEmails: {
+      type: String,
+    },
+    nameEnterprise: {
       type: String,
     },
   },

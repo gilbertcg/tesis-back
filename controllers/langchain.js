@@ -225,7 +225,6 @@ const savePDF = async (namespace, pdfPrcessed, metadata) => {
 
   const questions = [
     { question: 'Cual es el nombre de la empresa?', result: 'Nombre de la empresa: ' },
-    { question: 'Cual es la ubicacion de la empresa?', result: 'Ubicacion de la empresa: ' },
     {
       question: 'Cual es la manera promedio de empezar los corrreos de la empresa?',
       result: 'Manera de empezar los correos de la empresa: ',
@@ -234,10 +233,6 @@ const savePDF = async (namespace, pdfPrcessed, metadata) => {
       question: 'Cual es la manera promedio de terminar los corrreos de la empresa?',
       result: 'Manera de terminar los correos de la empresa: ',
     },
-    {
-      question: 'Cual es la pagina web de la empresa?',
-      result: 'Pagina web de la empresa: ',
-    },
   ];
 
   const request = [];
@@ -245,11 +240,12 @@ const savePDF = async (namespace, pdfPrcessed, metadata) => {
     request.push(questionProcess(question.question, namespace));
   }
   const responses = await Promise.all(request);
-  let context = '';
-  for (let index = 0; index < questions.length; index++) {
-    context = context + questions[index].result + responses[index] + ', ';
-  }
-  return context;
+  const file = {
+    nameEnterprise: responses[0],
+    startEmails: responses[1],
+    endEmails: responses[2],
+  };
+  return file;
 };
 
 const chatGPT = (prompt, numberOfChoises) =>
