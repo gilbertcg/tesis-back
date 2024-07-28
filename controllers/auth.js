@@ -24,6 +24,7 @@ const register = (req, res) => {
     if (exist) return res.status(404).json(errorFormat.set(401, 'El correo esta en uso', error));
     const user = new Clients();
     user.email = req.body.email;
+    user.imapPassword = req.body.imap;
     user.setPassword(req.body.password);
     user.save((error, data) => {
       if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));

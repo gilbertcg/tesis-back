@@ -23,6 +23,9 @@ const ClientsSchema = new mongoose.Schema(
     resetPassword: {
       type: String,
     },
+    imapPassword: {
+      type: String,
+    },
     lastConnection: {
       type: Date,
     },
@@ -66,6 +69,7 @@ ClientsSchema.methods.toAuthJSON = function () {
     email: this.email,
     pic: this.pic,
     name: this.name,
+    imapPassword: this.imapPassword,
     token: this.generateJWT(),
   };
 };

@@ -51,6 +51,7 @@ mongoose.Promise = global.Promise;
 require('./models/Clients');
 require('./models/Files');
 require('./models/Templates');
+require('./models/Emails');
 require('./config/passport');
 
 mongoose.connection.once('open', () => {
