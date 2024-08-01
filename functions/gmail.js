@@ -1,8 +1,11 @@
 const Imap = require('imap');
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 const { simpleParser } = require('mailparser');
 const Emails = mongoose.model('Emails');
+const pineconeController = require('../config/pinecone-client');
+const { PINECONE_INDEX_NAME_EMAILS } = process.env;
 
 function getEmails(email, password, startDate, endDate) {
   const imapConfig = {
@@ -82,6 +85,8 @@ function getEmails(email, password, startDate, endDate) {
 }
 
 function saveEmails(emails, clientID) {
+  const emailsFromated = formatEmailsToText(emails);
+  pineconeController.saveTextPinecone(PINECONE_INDEX_NAME_EMAILS, clientID, emailsFromated, {});
   for (const email of emails) {
     Emails.findOne({ gmailID: email.messageId }).exec((error, gmailEmail) => {
       if (error) {
@@ -100,6 +105,26 @@ function saveEmails(emails, clientID) {
       }
     });
   }
+}
+
+function formatEmailsToText(emails) {
+  let emailsText = '------------------------------------\n';
+  for (const email of emails) {
+    const formattedDate = moment(email.date).format('MMM DD, YYYY');
+
+    emailsText += `
+Email ID: ${email.messageId}
+Fecha: ${formattedDate}
+Para: ${email.from}
+Asunto: ${email.subject}
+
+Contenido:
+${email.body}
+
+------------------------------------
+    `;
+  }
+  return emailsText;
 }
 
 module.exports = {

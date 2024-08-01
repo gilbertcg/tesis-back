@@ -1,14 +1,10 @@
 const mongoose = require('mongoose');
-const pdf = require('pdf-parse');
-
 const errorFormat = require('../functions/errorCode');
-const langchainController = require('./langchain');
-const googleSpeechController = require('./google-speech');
-const gmailController = require('../functions/gmail');
-
+const googleSpeechController = require('../functions/whisper');
 const Templates = mongoose.model('Templates');
 const Files = mongoose.model('Files');
-const Emails = mongoose.model('Emails');
+
+const chatGPT = require('../functions/chatgpt');
 
 function saveChoises(client, original, daraParsed) {
   if (client._id) {
@@ -26,7 +22,7 @@ function saveChoises(client, original, daraParsed) {
 const processText = async (req, res) => {
   try {
     const prompt = await generatePrompt(req.body.text, req.client, req.body.sentiment);
-    const response = await langchainController.chatGPT(prompt, 4);
+    const response = await chatGPT.chatGPT(prompt, 4);
     if (!response) return res.status(400).json(errorFormat.set(400, 'Error in system'));
     const dataParsed = JSON.parse(response.body);
     saveChoises(req.client, req.body.text, dataParsed);
@@ -57,7 +53,7 @@ const translateText = async (req, res) => {
     que voy a enviar. 
 
     `;
-    const response = await langchainController.chatGPT(prompt, 1);
+    const response = await chatGPT.chatGPT(prompt, 1);
     if (!response) {
       return res.status(400).json(errorFormat.set(400, 'Error in gpt'));
     }
@@ -70,13 +66,6 @@ const translateText = async (req, res) => {
   }
 };
 
-// El codigo anterior es un mensaje de correo electronico empresarial, cuyo contexto de la empresa es el siguiente.
-
-// contexto empresa: ${context}
-
-//  usa este contexto de la empresa para completar campos que el texto original no tenga.
-
-//  Si en el contexto de la empresa hay informacion de la ubicacion, usala solo para para dar el acento del idioma.
 async function generatePrompt(text, client, sentiment) {
   const file = await Files.findOne({ clientID: client._id }).sort({ createdAt: -1 }).limit(1);
   let mensaje = `Quiero que actues como un profesional en la comunicacion por
@@ -146,49 +135,12 @@ const getTemplates = async (req, res) => {
   });
 };
 
-const getFiles = async (req, res) => {
-  let page = 1;
-  let limit = 10;
-  let filter = {
-    clientID: new mongoose.Types.ObjectId(req.client._id),
-  };
-  const sort = {};
-  if (typeof req.query.page !== 'undefined') page = Number(req.query.page);
-  if (typeof req.query.limit !== 'undefined') limit = Number(req.query.limit);
-  const conf = [{ $match: filter }];
-  sort[req.query.sortKey] = req.query.sort === 'desc' ? -1 : 1;
-  conf.push({ $sort: sort });
-  conf.push({ $skip: limit * page - limit }, { $limit: limit });
-  const agg = Files.aggregate(conf);
-  agg.options = { collation: { locale: 'es', strength: 3 } };
-  agg.exec(async (error, data) => {
-    const total = await Files.countDocuments({});
-    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-    Files.countDocuments(filter, (_err, count) => res.json({ data, count, total }));
-  });
-};
-
-const setPdf = async (req, res) => {
-  const pdfPrcessed = await pdf(req.file.buffer);
-  const metadata = { source: 'blob', blobType: req.file.mimetype };
-  const context = await langchainController.savePDF(req.client._id, pdfPrcessed, metadata);
-  const file = new Files({
-    name: req.body.fileName,
-    clientID: req.client._id,
-    nameEnterprise: context.nameEnterprise,
-    endEmails: context.endEmails,
-    startEmails: context.startEmails,
-  });
-  await file.save();
-  return res.status(200).json({ ok: true, file });
-};
-
 const processAudio = async (req, res) => {
   try {
     const transcription = await googleSpeechController.transcribeAudio(req.file);
     if (!transcription.text) return res.status(400).json(errorFormat.set(400, 'Error in transcription'));
     const prompt = await generatePrompt(transcription.text, req.client, req.body.sentiment);
-    const response = await langchainController.chatGPT(prompt, 4);
+    const response = await chatGPT.chatGPT(prompt, 4);
     if (!response) return res.status(400).json(errorFormat.set(400, 'Error in system'));
     const dataParsed = JSON.parse(response.body);
     saveChoises(req.client, req.body.text, dataParsed);
@@ -199,75 +151,9 @@ const processAudio = async (req, res) => {
   }
 };
 
-const updateEmails = async (req, res) => {
-  try {
-    const emails = await gmailController.getEmails(
-      req.client.email,
-      req.client.imapPassword,
-      'Jul 23, 2024',
-      'Jul 24, 2024',
-    );
-    if (!emails) {
-      return res.status(401).send('Error obteniendo emails');
-    }
-    gmailController.saveEmails(emails, req.client._id);
-    return res.status(200).json({});
-  } catch (err) {
-    console.error('ERROR:', err);
-    res.status(500).send('Error processing the audio file');
-  }
-};
-
-const getEmails = async (req, res) => {
-  try {
-    let page = 1;
-    let limit = 10;
-    let filter = {
-      clientID: new mongoose.Types.ObjectId(req.client._id),
-    };
-    const sort = {};
-    if (typeof req.query.page !== 'undefined') page = Number(req.query.page);
-    if (typeof req.query.limit !== 'undefined') limit = Number(req.query.limit);
-    const conf = [{ $match: filter }];
-    sort[req.query.sortKey] = req.query.sort === 'desc' ? -1 : 1;
-    conf.push({ $sort: sort });
-    conf.push({ $skip: limit * page - limit }, { $limit: limit });
-    const agg = Emails.aggregate(conf);
-    agg.options = { collation: { locale: 'es', strength: 3 } };
-    agg.exec(async (error, data) => {
-      const total = await Emails.countDocuments({});
-      if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
-      Emails.countDocuments(filter, (_err, count) => res.json({ data, count, total }));
-    });
-  } catch (err) {
-    console.error('ERROR:', err);
-    res.status(500).send('Error processing the audio file');
-  }
-};
-
-const chatbot = async (req, res) => {
-  try {
-    return res.json({ reply: 'respuesta de bot' });
-  } catch (err) {
-    console.error('ERROR:', err);
-    res.status(500).send('Error processing the audio file');
-  }
-};
-
-const resumeConversation = async (req, res) => {
-  const resumen = await langchainController.resumenChain(req.body.text);
-  return res.status(200).json({ ok: true, resumen });
-};
-
 module.exports = {
   processText,
   getTemplates,
   translateText,
-  setPdf,
-  getFiles,
-  resumeConversation,
   processAudio,
-  getEmails,
-  updateEmails,
-  chatbot,
 };
