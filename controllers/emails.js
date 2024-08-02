@@ -2,16 +2,29 @@ const mongoose = require('mongoose');
 const moment = require('moment');
 
 const errorFormat = require('../functions/errorCode');
-const composio = require('../functions/composio');
 const langchain = require('../functions/langchain');
 const gmail = require('../functions/gmail');
 const Emails = mongoose.model('Emails');
 
 const updateEmails = async (req, res) => {
   try {
-    const startDate = moment(req.body.startDate).format('MMM DD, YYYY');
-    const endDate = moment(req.body.endDate).format('MMM DD, YYYY');
-    const emails = await gmail.getEmails(req.client.email, req.client.imapPassword, startDate, endDate);
+    let searchFilters;
+    if (req.body.startDate && req.body.endDate) {
+      const startDate = moment(req.body.startDate).format('MMM DD, YYYY');
+      const endDate = moment(req.body.endDate).format('MMM DD, YYYY');
+      searchFilters = [
+        ['SINCE', startDate],
+        ['BEFORE', endDate],
+      ];
+    } else {
+      const startDate = moment().subtract(1, 'months').format('MMM DD, YYYY');
+      const endDate = moment().add(1, 'days').format('MMM DD, YYYY');
+      searchFilters = [
+        ['SINCE', startDate],
+        ['BEFORE', endDate],
+      ];
+    }
+    const emails = await gmail.getEmails(req.client.email, req.client.imapPassword, searchFilters);
     if (!emails) {
       return res.status(401).send('Error obteniendo emails');
     }
@@ -25,12 +38,12 @@ const updateEmails = async (req, res) => {
 
 const getEmails = async (req, res) => {
   try {
-    // composio.composioTest();
     let page = 1;
     let limit = 10;
     let filter = {
       clientID: new mongoose.Types.ObjectId(req.client._id),
     };
+
     const sort = {};
     if (typeof req.query.page !== 'undefined') page = Number(req.query.page);
     if (typeof req.query.limit !== 'undefined') limit = Number(req.query.limit);

@@ -1,13 +1,14 @@
 const Imap = require('imap');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const nodemailer = require('nodemailer');
 
 const { simpleParser } = require('mailparser');
 const Emails = mongoose.model('Emails');
 const pineconeController = require('../config/pinecone-client');
 const { PINECONE_INDEX_NAME_EMAILS } = process.env;
 
-function getEmails(email, password, startDate, endDate) {
+function getEmails(email, password, searchFilters) {
   const imapConfig = {
     user: email,
     password: password,
@@ -29,46 +30,45 @@ function getEmails(email, password, startDate, endDate) {
   imap.once('ready', () => {
     openInbox(err => {
       if (err) throw err;
-      imap.search(
-        [
-          ['SINCE', startDate],
-          ['BEFORE', endDate],
-        ],
-        (err, results) => {
-          if (err) throw err;
-          if (results.length === 0) {
-            console.log('No unread emails found.');
-            imap.end();
-            return emailsArray; // Retorna aunque el arreglo esté vacío
-          }
-          const f = imap.fetch(results, { bodies: '' });
+      imap.search(searchFilters, (err, results) => {
+        if (err) throw err;
+        if (results.length === 0) {
+          console.log('No unread emails found.');
+          imap.end();
+          return emailsArray;
+        }
+        const f = imap.fetch(results, { bodies: '' });
 
-          f.on('message', msg => {
-            msg.on('body', stream => {
-              simpleParser(stream, (err, mail) => {
-                if (err) throw err;
-                emailsArray.push({
-                  subject: mail.subject,
-                  messageId: mail.messageId,
-                  from: mail.from.text,
-                  body: mail.text,
-                  date: mail.date,
-                });
+        f.on('message', msg => {
+          msg.on('body', stream => {
+            simpleParser(stream, (err, mail) => {
+              if (err) throw err;
+              const mailbox = imapConfig.mailbox || 'INBOX';
+              let type = 'received';
+              if (mailbox === 'INBOX') {
+                type = 'received';
+              } else if (mailbox === 'Sent') {
+                type = 'sent';
+              } else if (mailbox === 'Drafts') {
+                type = 'draft';
+              }
+              emailsArray.push({
+                subject: mail.subject,
+                messageId: mail.messageId,
+                from: mail.from.text,
+                body: mail.text,
+                date: mail.date,
+                type,
               });
             });
           });
+        });
 
-          f.once('end', () => {
-            console.log('Done fetching all messages!');
-            imap.end();
-          });
-        },
-      );
+        f.once('end', () => {
+          imap.end();
+        });
+      });
     });
-  });
-
-  imap.once('end', () => {
-    console.log('Connection ended');
   });
 
   imap.connect();
@@ -99,6 +99,7 @@ function saveEmails(emails, clientID) {
           gmailID: email.messageId,
           from: email.from,
           subject: email.subject,
+          type: email.type,
           gmailCreationDate: new Date(email.date),
         });
         newGemailEmail.save();
@@ -117,6 +118,7 @@ Email ID: ${email.messageId}
 Fecha: ${formattedDate}
 Para: ${email.from}
 Asunto: ${email.subject}
+Tipo: ${email.type}
 
 Contenido:
 ${email.body}
@@ -127,7 +129,33 @@ ${email.body}
   return emailsText;
 }
 
+async function sendEmail(to, subject, text, email, pass) {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: email,
+        pass: pass,
+      },
+    });
+
+    const mailOptions = {
+      from: `<${email}>`,
+      to: to,
+      subject: subject,
+      text: text,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return 'Mensaje enviado id:' + info.messageId;
+  } catch (error) {
+    console.error('Error enviando el correo: ', error);
+    return 'Error al enviar el correo';
+  }
+}
+
 module.exports = {
   getEmails,
   saveEmails,
+  sendEmail,
 };

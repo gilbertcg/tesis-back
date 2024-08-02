@@ -1,13 +1,18 @@
-const langchain = require('../functions/langchain');
+const composio = require('../functions/composio');
 
 const chatbot = async (req, res) => {
   try {
-    const response = await langchain.questionProcess(
-      req.body.question,
-      req.client._id,
-      process.env.PINECONE_INDEX_NAME_EMAILS,
-    );
-    return res.json({ reply: response });
+    const connection = await composio.setupUserConnectionIfNotExists(req.client.email);
+    if (connection.url) {
+      return res.status(200).json({ reply: 'Primero necesita autenticar', url: connection.url });
+    }
+    const response = await composio.agentTest({
+      apps: ['gmail'],
+      entityName: req.client.email,
+      TASK: req.body.question,
+      chatHistory: req.body.chatHistory,
+    });
+    return res.status(200).json({ reply: response });
   } catch (err) {
     console.error('ERROR:', err);
     res.status(500).send('Error processing the audio file');

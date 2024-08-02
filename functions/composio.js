@@ -1,53 +1,64 @@
 const { ChatOpenAI } = require('@langchain/openai');
-const { AgentExecutor, createOpenAIFunctionsAgent } = require('langchain/agents');
-const { LangchainToolSet } = require('composio-core');
-const { pull } = require('langchain/hub');
+const { AgentExecutor, createToolCallingAgent } = require('langchain/agents');
+const { LangchainToolSet, OpenAIToolSet } = require('composio-core');
+const { ChatPromptTemplate } = require('@langchain/core/prompts');
 
-async function composioTest() {
-  const composioToolset = new LangchainToolSet({
-    apiKey: process.env.COMPOSIO_API_KEY,
-  });
-  const tools = await composioToolset.getActions({
-    actions: ['googlecalendar_create_event', 'googlecalendar_list_events'],
-  });
-
-  const getCurrentDate = () => new Date().toISOString().split('T')[0];
-  const getTimezone = () => new Date().toLocaleTimeString('en-us', { timeZoneName: 'short' }).split(' ')[2];
-
-  const date = getCurrentDate();
-  const timezone = getTimezone();
-
-  const todo = `
-1PM - 3PM -> Code solo
-`;
+async function agentTest(inputs) {
+  const toolset = new LangchainToolSet({ apiKey: process.env.COMPOSIO_API_KEY });
+  const entity = await toolset.client.getEntity(inputs.entityName);
   const llm = new ChatOpenAI({
     temperature: 0,
     modelName: 'gpt-3.5-turbo',
   });
-  const prompt = await pull('hwchase17/openai-functions-agent');
-  const agent = await createOpenAIFunctionsAgent({
+
+  const apps = inputs.apps;
+  const composio_tools = await toolset.getTools(
+    {
+      apps: apps,
+    },
+    entity.id,
+  );
+
+  const agent = await createToolCallingAgent({
     llm,
-    tools,
-    prompt,
     verbose: false,
+    tools: composio_tools,
+    prompt: ChatPromptTemplate.fromMessages([
+      [
+        'system',
+        `Eres un asistente experimentado que sabe mucho sobre las siguientes aplicaciones.: ${apps.join(', ')}.
+Podrás realizar cualquier tarea solicitada por el usuario a través de todas las herramientas a las que tienes acceso. Su objetivo es completar la tarea del usuario utilizando las herramientas a las que tiene acceso.
+          `,
+      ],
+      ['placeholder', '{chat_history}'],
+      ['human', '{input}'],
+      ['placeholder', '{agent_scratchpad}'],
+    ]),
   });
-
-  const agentExecutor = new AgentExecutor({
-    agent,
-    tools,
-    verbose: false,
+  const executor = new AgentExecutor({ agent: agent, tools: composio_tools, verbose: false });
+  const result = await executor.invoke({
+    input: `Users wants to do ${inputs.TASK}`,
+    chat_history: JSON.stringify(inputs.chatHistory),
   });
+  return result.output;
+}
 
-  const result = await agentExecutor.invoke({
-    input: `Book slots according to this todo list: ${todo}. 
-            Label them with the work provided to be done in that time period. 
-            Schedule it for today. Today's date is ${date} (it's in YYYY-MM-DD format) 
-            and make the timezone be ${timezone}.`,
+async function setupUserConnectionIfNotExists(entityId) {
+  const toolset = new OpenAIToolSet({
+    apiKey: process.env.COMPOSIO_API_KEY,
   });
+  const entity = await toolset.client.getEntity(entityId);
+  const connection = await entity.getConnection('gmail');
 
-  console.log(result.output);
+  if (!connection) {
+    const connection = await entity.initiateConnection('gmail');
+    return { connection: connection.waitUntilActive(60), url: connection.redirectUrl };
+  }
+
+  return connection;
 }
 
 module.exports = {
-  composioTest,
+  agentTest,
+  setupUserConnectionIfNotExists,
 };

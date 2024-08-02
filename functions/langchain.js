@@ -1,6 +1,6 @@
 const { ChatOpenAI } = require('@langchain/openai');
-// const { initializeAgentExecutorWithOptions, AgentExecutor, createOpenAIFunctionsAgent } = require('langchain/agents');
-// const { DynamicTool } = require('@langchain/core/tools');
+const { createOpenAIFunctionsAgent, AgentExecutor } = require('langchain/agents');
+const { DynamicStructuredTool, DynamicTool } = require('@langchain/core/tools');
 const { ChatPromptTemplate, PromptTemplate } = require('@langchain/core/prompts');
 const { TokenTextSplitter } = require('langchain/text_splitter');
 const { PineconeStore } = require('@langchain/pinecone');
@@ -9,6 +9,8 @@ const { pinecone } = require('../config/pinecone-client');
 const { RunnableSequence } = require('@langchain/core/runnables');
 const { StringOutputParser } = require('@langchain/core/output_parsers');
 const { loadSummarizationChain } = require('langchain/chains');
+const { z } = require('zod');
+const gmail = require('./gmail');
 
 const {
   CONDENSE_TEMPLATE_TEST,
@@ -111,11 +113,70 @@ const questionProcess = async (question, namespace, pinecone_index) => {
   }
 };
 
-async function customTools() {}
+async function customEmailAgent(client, emails) {
+  const llm = new ChatOpenAI({
+    model: 'gpt-3.5-turbo',
+    temperature: 0,
+  });
+
+  const tools = [
+    new DynamicTool({
+      name: 'email-geter',
+      description: 'Obtiene los emails',
+      func: async () => {
+        return `Lista de emails: ${JSON.stringify(emails)}`;
+      },
+    }),
+    new DynamicStructuredTool({
+      name: 'email-sender',
+      description: 'Envia correos electronicos dada una direccion de correo y mensaje de correo',
+      schema: z.object({
+        to: z.string().describe('La direccion de correo electronico a enviar'),
+        body: z.string().describe('el contenido del correo electronico a enviar'),
+        subject: z.string().describe('el subject del correo electronico a enviar'),
+      }),
+      func: async ({ to, body, subject }) => {
+        const newEmail = await gmail.sendEmail(to, subject, body, client.email, client.imapPassword);
+        return newEmail;
+      },
+    }),
+  ];
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ['system', 'You are a helpful assistant'],
+    ['placeholder', '{chat_history}'],
+    ['human', '{input}'],
+    ['placeholder', '{agent_scratchpad}'],
+  ]);
+
+  const agent = await createOpenAIFunctionsAgent({
+    llm,
+    tools,
+    prompt,
+    verbose: false,
+  });
+  const agentExecutor = new AgentExecutor({
+    agent,
+    tools,
+    verbose: false,
+  });
+
+  return agentExecutor;
+}
+
+async function emailAgentExecutor(input, client, emails) {
+  const agentExecutor = await customEmailAgent(client, emails);
+  const result = await agentExecutor.invoke({
+    input: input,
+    verbose: false,
+  });
+  return result.output;
+}
 
 module.exports = {
   makeChain,
   questionProcess,
   resumenChain,
-  customTools,
+  customEmailAgent,
+  emailAgentExecutor,
 };
