@@ -1,6 +1,6 @@
 const { ChatOpenAI } = require('@langchain/openai');
 const { createOpenAIFunctionsAgent, AgentExecutor } = require('langchain/agents');
-const { DynamicStructuredTool, DynamicTool } = require('@langchain/core/tools');
+const { DynamicStructuredTool } = require('@langchain/core/tools');
 const { ChatPromptTemplate, PromptTemplate } = require('@langchain/core/prompts');
 const { TokenTextSplitter } = require('langchain/text_splitter');
 const { PineconeStore } = require('@langchain/pinecone');
@@ -17,6 +17,9 @@ const {
   QA_TEMPLATE_TEST,
   summaryTemplate,
   summaryRefineTemplate,
+  sentimentTemplate,
+  priorityTemplate,
+  autoResponseTemplate,
 } = require('./promps-templates');
 
 const combineDocumentsFn = (docs, separator = '\n\n') => {
@@ -81,6 +84,91 @@ const resumenChain = async conversation => {
   }
 };
 
+const sentimentChain = async conversation => {
+  try {
+    const model = new ChatOpenAI({
+      temperature: 0,
+      modelName: 'gpt-3.5-turbo',
+    });
+    const splitter = new TokenTextSplitter({
+      chunkSize: 10000,
+      chunkOverlap: 250,
+    });
+    const docsSummary = await splitter.splitDocuments([{ pageContent: conversation, metadata: { loc: null } }]);
+    const SUMMARY_PROMPT = PromptTemplate.fromTemplate(sentimentTemplate);
+    const summarizeChain = loadSummarizationChain(model, {
+      type: 'refine',
+      verbose: false,
+      questionPrompt: SUMMARY_PROMPT,
+    });
+    const inputs = {
+      input_documents: docsSummary.map(doc => ({ pageContent: doc.pageContent })),
+    };
+    const summaries = await summarizeChain.call(inputs);
+    return summaries.output_text;
+  } catch (error) {
+    console.error('Error summarizing conversation:', error);
+    throw error;
+  }
+};
+
+const priorityChain = async (conversation, emails) => {
+  try {
+    const model = new ChatOpenAI({
+      temperature: 0,
+      modelName: 'gpt-3.5-turbo',
+    });
+    const splitter = new TokenTextSplitter({
+      chunkSize: 10000,
+      chunkOverlap: 250,
+    });
+    const docsSummary = await splitter.splitDocuments([{ pageContent: conversation, metadata: { loc: null } }]);
+    const SUMMARY_PROMPT = PromptTemplate.fromTemplate(priorityTemplate);
+    const summarizeChain = loadSummarizationChain(model, {
+      type: 'refine',
+      verbose: false,
+      questionPrompt: SUMMARY_PROMPT,
+    });
+    const inputs = {
+      input_documents: docsSummary.map(doc => ({ pageContent: doc.pageContent })),
+      emails_list: emails.join(', '),
+    };
+    const summaries = await summarizeChain.call(inputs);
+    return summaries.output_text;
+  } catch (error) {
+    console.error('Error summarizing conversation:', error);
+    throw error;
+  }
+};
+
+const autoResponseChain = async conversation => {
+  try {
+    const model = new ChatOpenAI({
+      temperature: 0,
+      modelName: 'gpt-3.5-turbo',
+    });
+    const splitter = new TokenTextSplitter({
+      chunkSize: 10000,
+      chunkOverlap: 250,
+    });
+    const docsSummary = await splitter.splitDocuments([{ pageContent: conversation, metadata: { loc: null } }]);
+    const SUMMARY_PROMPT = PromptTemplate.fromTemplate(autoResponseTemplate);
+    const summarizeChain = loadSummarizationChain(model, {
+      type: 'refine',
+      verbose: false,
+      questionPrompt: SUMMARY_PROMPT,
+    });
+    const inputs = {
+      input_documents: docsSummary.map(doc => ({ pageContent: doc.pageContent })),
+    };
+    const summaries = await summarizeChain.call(inputs);
+    return summaries.output_text;
+  } catch (error) {
+    console.error('Error summarizing conversation:', error);
+    throw error;
+  }
+};
+
 const questionProcess = async (question, namespace, pinecone_index) => {
   try {
     const index = pinecone.Index(pinecone_index);
@@ -113,20 +201,13 @@ const questionProcess = async (question, namespace, pinecone_index) => {
   }
 };
 
-async function customEmailAgent(client, emails) {
+async function customEmailAgent(client) {
   const llm = new ChatOpenAI({
     model: 'gpt-3.5-turbo',
     temperature: 0,
   });
 
   const tools = [
-    new DynamicTool({
-      name: 'email-geter',
-      description: 'Obtiene los emails',
-      func: async () => {
-        return `Lista de emails: ${JSON.stringify(emails)}`;
-      },
-    }),
     new DynamicStructuredTool({
       name: 'email-sender',
       description: 'Envia correos electronicos dada una direccion de correo y mensaje de correo',
@@ -164,8 +245,8 @@ async function customEmailAgent(client, emails) {
   return agentExecutor;
 }
 
-async function emailAgentExecutor(input, client, emails) {
-  const agentExecutor = await customEmailAgent(client, emails);
+async function emailAgentExecutor(input, client) {
+  const agentExecutor = await customEmailAgent(client);
   const result = await agentExecutor.invoke({
     input: input,
     verbose: false,
@@ -175,8 +256,11 @@ async function emailAgentExecutor(input, client, emails) {
 
 module.exports = {
   makeChain,
+  sentimentChain,
   questionProcess,
   resumenChain,
   customEmailAgent,
   emailAgentExecutor,
+  priorityChain,
+  autoResponseChain,
 };

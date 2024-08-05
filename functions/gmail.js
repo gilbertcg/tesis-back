@@ -1,12 +1,8 @@
 const Imap = require('imap');
 const mongoose = require('mongoose');
-const moment = require('moment');
-const nodemailer = require('nodemailer');
-
 const { simpleParser } = require('mailparser');
 const Emails = mongoose.model('Emails');
-const pineconeController = require('../config/pinecone-client');
-const { PINECONE_INDEX_NAME_EMAILS } = process.env;
+const nodemailer = require('nodemailer');
 
 function getEmails(email, password, searchFilters) {
   const imapConfig = {
@@ -44,13 +40,13 @@ function getEmails(email, password, searchFilters) {
             simpleParser(stream, (err, mail) => {
               if (err) throw err;
               const mailbox = imapConfig.mailbox || 'INBOX';
-              let type = 'received';
+              let type = 'Recibido';
               if (mailbox === 'INBOX') {
-                type = 'received';
+                type = 'Recibido';
               } else if (mailbox === 'Sent') {
-                type = 'sent';
+                type = 'Enviado';
               } else if (mailbox === 'Drafts') {
-                type = 'draft';
+                type = 'Borrador';
               }
               emailsArray.push({
                 subject: mail.subject,
@@ -59,6 +55,7 @@ function getEmails(email, password, searchFilters) {
                 body: mail.text,
                 date: mail.date,
                 type,
+                url: `https://mail.google.com/mail/u/0/#search/rfc822msgid:${encodeURIComponent(mail.messageId)}`,
               });
             });
           });
@@ -84,16 +81,12 @@ function getEmails(email, password, searchFilters) {
   });
 }
 
-function saveEmails(emails, clientID) {
-  const emailsFromated = formatEmailsToText(emails);
-  pineconeController.saveTextPinecone(PINECONE_INDEX_NAME_EMAILS, clientID, emailsFromated, {});
-  for (const email of emails) {
-    Emails.findOne({ gmailID: email.messageId }).exec((error, gmailEmail) => {
-      if (error) {
-        console.log(error);
-      }
+async function saveEmails(emails, clientID) {
+  const savePromises = emails.map(async email => {
+    try {
+      const gmailEmail = await Emails.findOne({ gmailID: email.messageId }).exec();
       if (!gmailEmail) {
-        const newGemailEmail = new Emails({
+        const newGmailEmail = new Emails({
           clientID: clientID,
           body: email.body,
           gmailID: email.messageId,
@@ -101,32 +94,17 @@ function saveEmails(emails, clientID) {
           subject: email.subject,
           type: email.type,
           gmailCreationDate: new Date(email.date),
+          url: email.url,
+          processed: false,
         });
-        newGemailEmail.save();
+        await newGmailEmail.save();
       }
-    });
-  }
-}
+    } catch (error) {
+      console.log(error);
+    }
+  });
 
-function formatEmailsToText(emails) {
-  let emailsText = '------------------------------------\n';
-  for (const email of emails) {
-    const formattedDate = moment(email.date).format('MMM DD, YYYY');
-
-    emailsText += `
-Email ID: ${email.messageId}
-Fecha: ${formattedDate}
-Para: ${email.from}
-Asunto: ${email.subject}
-Tipo: ${email.type}
-
-Contenido:
-${email.body}
-
-------------------------------------
-    `;
-  }
-  return emailsText;
+  await Promise.all(savePromises);
 }
 
 async function sendEmail(to, subject, text, email, pass) {

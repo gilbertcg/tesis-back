@@ -33,8 +33,28 @@ const register = (req, res) => {
   });
 };
 
+const update = (req, res) => {
+  Clients.findOne({ _id: req.payload.id }).exec((error, user) => {
+    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+    if (typeof req.body.name !== 'undefined') {
+      user.name = req.body.name;
+    }
+    if (typeof req.body.autoResponses !== 'undefined') {
+      user.sendAutoResponses = req.body.autoResponses;
+    }
+    if (typeof req.body.emails !== 'undefined') {
+      user.emails = req.body.emails;
+    }
+    user.save((error, data) => {
+      if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+      return res.json(data.toAuthJSON());
+    });
+  });
+};
+
 module.exports = {
   login,
   getClient,
   register,
+  update,
 };

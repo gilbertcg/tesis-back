@@ -33,6 +33,14 @@ const ClientsSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    sendAutoResponses: {
+      type: Boolean,
+      default: false,
+    },
+    emails: {
+      type: [String],
+      default: [],
+    },
     verified: {
       type: Boolean,
       default: false,
@@ -70,6 +78,8 @@ ClientsSchema.methods.toAuthJSON = function () {
     pic: this.pic,
     name: this.name,
     imapPassword: this.imapPassword,
+    sendAutoResponses: this.sendAutoResponses,
+    emails: this.emails,
     token: this.generateJWT(),
   };
 };

@@ -44,9 +44,60 @@ El resultado total será un resumen de la conversacion.
 
 RESUMEN:
 `;
+
+const sentimentTemplate = `
+Eres un experto en evaluar conversaciones de correo electronico.
+Su objetivo es obtener un analisis de sentimiento de esta conversacion
+
+A continuación  encontrará la conversacion:
+--------
+{text}
+--------
+
+Dado el contexto, devuelva un valor del 1 al 5 donde 1 es el sentimiento mas negativo y 5 es el sentimiento mas positivo
+
+SENTIMIENTO:
+`;
+
+const priorityTemplate = `
+Eres un experto en evaluar conversaciones de correo electronico.
+Su objetivo es obtener un analisis de prioridad de esta conversacion
+
+A continuación  encontrará la conversacion:
+--------
+{text}
+--------
+
+
+Aqui te dejo una lista de las direcciones de email mas importantes, si la conversacion coincide con alguno de estas direcciones, considera darle mas prioridad
+--------
+{emails_list}
+--------
+
+Dado el contexto, devuelva un valor del 1 al 5 donde 1 es la prioridad  mas alta y 5 es la prioridad mas baja
+
+PRIORIDAD:
+`;
+
+const autoResponseTemplate = `
+Eres un experto en redactar conversaciones de correo electronico.
+Su objetivo es generar una respuesta para esta conversacion y obtener la direccion de email a donde se va a enviar la respuesta
+
+A continuación  encontrará la conversacion:
+--------
+{text}
+--------
+
+Una vez generada la respuesta, quiero que me generes una instruccion donde mandes a enviar un email a la direccion que obtuviste de la conversacion
+
+INSTRUCCION:
+`;
 module.exports = {
   summaryRefineTemplate,
   summaryTemplate,
   QA_TEMPLATE_TEST,
   CONDENSE_TEMPLATE_TEST,
+  sentimentTemplate,
+  priorityTemplate,
+  autoResponseTemplate,
 };

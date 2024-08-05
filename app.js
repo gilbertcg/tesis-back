@@ -8,6 +8,13 @@ const http = require('http');
 const fs = require('fs');
 require('dotenv').config();
 const { pinecone } = require('./config/pinecone-client');
+const cron = require('node-cron');
+require('./models/Clients');
+require('./models/Files');
+require('./models/Templates');
+require('./models/Emails');
+require('./config/passport');
+const emailsController = require('./controllers/emails');
 
 const certs = {
   key: '',
@@ -48,12 +55,6 @@ mongoose
   .catch(err => console.error(err));
 mongoose.Promise = global.Promise;
 
-require('./models/Clients');
-require('./models/Files');
-require('./models/Templates');
-require('./models/Emails');
-require('./config/passport');
-
 mongoose.connection.once('open', () => {
   app.emit('ready');
 });
@@ -82,4 +83,8 @@ app.on('ready', () => {
   server.listen(process.env.PORT, () => {
     console.log(`Listening on port ${server.address().port}`);
   });
+});
+
+cron.schedule('0 7 * * *', () => {
+  emailsController.updateAllClientsEmails();
 });

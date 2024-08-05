@@ -15,6 +15,7 @@ const TemplatesController = require('../../controllers/templates');
 router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
 router.get('/client/me', auth.client, auth.loggingIn.required, AuthController.getClient);
+router.put('/client', auth.client, auth.loggingIn.required, AuthController.update);
 
 // files
 router.post('/client/pdf', auth.client, auth.loggingIn.required, upload.single('pdf'), DocumentsController.setPdf);

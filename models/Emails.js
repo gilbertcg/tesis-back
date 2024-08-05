@@ -16,6 +16,21 @@ const EmailsSchema = new mongoose.Schema(
     subject: {
       type: String,
     },
+    type: {
+      type: String,
+    },
+    url: {
+      type: String,
+    },
+    processed: {
+      type: Boolean,
+    },
+    sentiment: {
+      type: Number,
+    },
+    priority: {
+      type: Number,
+    },
     from: {
       type: String,
     },
