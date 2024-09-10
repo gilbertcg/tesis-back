@@ -16,7 +16,8 @@ router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
 router.get('/client/me', auth.client, auth.loggingIn.required, AuthController.getClient);
 router.put('/client', auth.client, auth.loggingIn.required, AuthController.update);
-
+router.post('/forgot-password', AuthController.forgotPassword);
+router.post('/reset-password', AuthController.resetPassword);
 // files
 router.post('/client/pdf', auth.client, auth.loggingIn.required, upload.single('pdf'), DocumentsController.setPdf);
 router.get('/client/files', auth.client, auth.loggingIn.required, DocumentsController.getFiles);

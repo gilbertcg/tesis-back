@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 
 const Clients = mongoose.model('Clients');
 const errorFormat = require('../functions/errorCode');
+const gmail = require('../functions/gmail');
 
 const login = async (req, res) => {
   if (!req.body.email) return res.status(422).json(errorFormat.set(422, 'Fill you email'));
@@ -52,9 +53,44 @@ const update = (req, res) => {
   });
 };
 
+const forgotPassword = async (req, res) => {
+  const adminEmail = await Clients.findOne({ email: 'gilbertcg99@gmail.com' });
+  Clients.findOne({ email: req.body.email }).exec((error, client) => {
+    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+    if (!client) return res.json({});
+    client.resetPassword = Math.random().toString(36).substring(7);
+    gmail.sendEmail(
+      client.email,
+      'Codigo de contrasena',
+      `Su codigo es ${client.resetPassword}`,
+      adminEmail.email,
+      adminEmail.imapPassword,
+    );
+    client.save(error => {
+      if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+      return res.json({});
+    });
+  });
+};
+
+const resetPassword = (req, res) => {
+  Clients.findOne({ resetPassword: req.body.code, email: req.body.email }).exec((error, client) => {
+    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+    if (!client) return res.status(400).json(errorFormat.set(401, 'Invalid code'));
+    client.setPassword(req.body.password);
+    client.resetPassword = null;
+    client.save(error => {
+      if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+      return res.json({});
+    });
+  });
+};
+
 module.exports = {
   login,
   getClient,
   register,
   update,
+  forgotPassword,
+  resetPassword,
 };
