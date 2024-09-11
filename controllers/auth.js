@@ -46,6 +46,9 @@ const update = (req, res) => {
     if (typeof req.body.emails !== 'undefined') {
       user.emails = req.body.emails;
     }
+    if (typeof req.body.imap !== 'undefined') {
+      user.imapPassword = req.body.imap;
+    }
     user.save((error, data) => {
       if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
       return res.json(data.toAuthJSON());

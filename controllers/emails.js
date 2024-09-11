@@ -10,6 +10,9 @@ const Clients = mongoose.model('Clients');
 
 const updateEmails = async (req, res) => {
   try {
+    if (!req.client.imapPassword) {
+      return res.status(401).send('Error obteniendo emails');
+    }
     let searchFilters;
     if (req.body.startDate && req.body.endDate) {
       const startDate = moment(req.body.startDate).format('MMM DD, YYYY');
