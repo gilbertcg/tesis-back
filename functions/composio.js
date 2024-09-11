@@ -5,19 +5,27 @@ const { ChatPromptTemplate } = require('@langchain/core/prompts');
 
 async function agentTest(inputs) {
   const toolset = new LangchainToolSet({ apiKey: process.env.COMPOSIO_API_KEY });
-  const entity = await toolset.client.getEntity(inputs.entityName);
+  // const entity = await toolset.client.getEntity(inputs.entityName);
   const llm = new ChatOpenAI({
     temperature: 0,
-    modelName: 'gpt-3.5-turbo',
+    modelName: 'gpt-4o',
   });
 
-  const apps = inputs.apps;
-  const composio_tools = await toolset.getTools(
-    {
-      apps: apps,
-    },
-    entity.id,
-  );
+  // const apps = inputs.apps;
+  const composio_tools = await toolset.getActions({
+    actions: [
+      'GMAIL_SEND_EMAIL',
+      'GMAIL_CREATE_EMAIL_DRAFT',
+      'GMAIL_LIST_LABELS',
+      'GMAIL_REPLY_TO_THREAD',
+      'GMAIL_FETCH_EMAILS',
+      'GMAIL_LIST_THREADS',
+      'GMAIL_GET_ATTACHMENT',
+      'GMAIL_ADD_LABEL_TO_EMAIL',
+      'GMAIL_NEW_GMAIL_MESSAGE',
+      'GMAIL_FETCH_MESSAGE_BY_THREAD_ID',
+    ],
+  });
 
   const agent = await createToolCallingAgent({
     llm,
@@ -26,7 +34,7 @@ async function agentTest(inputs) {
     prompt: ChatPromptTemplate.fromMessages([
       [
         'system',
-        `Eres un asistente experimentado que sabe mucho sobre las siguientes aplicaciones.: ${apps.join(', ')}.
+        `Eres un asistente experimentado que sabe mucho sobre las siguientes aplicaciones.: GMAIL.
 Podrás realizar cualquier tarea solicitada por el usuario a través de todas las herramientas a las que tienes acceso. Su objetivo es completar la tarea del usuario utilizando las herramientas a las que tiene acceso.
           `,
       ],
