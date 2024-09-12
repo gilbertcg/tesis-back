@@ -138,9 +138,17 @@ function updateAllClientsEmails() {
   });
 }
 
+const deleteById = async (req, res) => {
+  Emails.findByIdAndDelete({ _id: req.params.id, clientID: req.client._id }).exec(error => {
+    if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
+    return res.json({});
+  });
+};
+
 module.exports = {
   resumeConversation,
   getEmails,
   updateEmails,
   updateAllClientsEmails,
+  deleteById,
 };

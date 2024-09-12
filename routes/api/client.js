@@ -38,7 +38,7 @@ router.post(
 router.post('/client/resumeText', auth.client, auth.loggingIn.required, EmailsController.resumeConversation);
 router.get('/client/emails', auth.client, auth.loggingIn.required, EmailsController.getEmails);
 router.post('/client/emails', auth.client, auth.loggingIn.required, EmailsController.updateEmails);
-
+router.delete('/client/emails/:id', auth.client, auth.loggingIn.required, EmailsController.deleteById);
 // chatbot
 router.post('/client/chatbot', auth.client, auth.loggingIn.required, ChatbotController.chatbot);
 
