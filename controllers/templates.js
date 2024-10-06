@@ -23,6 +23,7 @@ const processText = async (req, res) => {
   try {
     const prompt = await generatePrompt(req.body.text, req.client, req.body.sentiment);
     const response = await chatGPT.chatGPT(prompt, 4);
+    console.log(response);
     if (!response) return res.status(400).json(errorFormat.set(400, 'Error in system'));
     const dataParsed = JSON.parse(response.body);
     saveChoises(req.client, req.body.text, dataParsed);

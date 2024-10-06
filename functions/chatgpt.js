@@ -21,7 +21,6 @@ const chatGPT = (prompt, numberOfChoises) =>
             console.log('Error openAit ', err);
             return resolve(null);
           }
-
           return resolve({ body });
         },
       );
