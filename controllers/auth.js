@@ -58,10 +58,15 @@ const update = (req, res) => {
 
 const forgotPassword = async (req, res) => {
   const adminEmail = await Clients.findOne({ email: 'gilbertcg99@gmail.com' });
+  if (!adminEmail || !adminEmail.imapPassword) {
+    return res.status(400).json(errorFormat.set(400, 'Error in system admin', {}));
+  }
+  console.log(adminEmail.imapPassword);
   Clients.findOne({ email: req.body.email }).exec((error, client) => {
     if (error) return res.status(400).json(errorFormat.set(400, 'Error in system', error));
     if (!client) return res.json({});
     client.resetPassword = Math.random().toString(36).substring(7);
+    console.log(adminEmail.imapPassword);
     gmail.sendEmail(
       client.email,
       'Codigo de contrasena',
