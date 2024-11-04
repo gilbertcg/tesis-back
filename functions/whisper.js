@@ -9,7 +9,6 @@ async function transcribeAudio(file) {
     const filenameParts = file.originalname.split('.');
     const fileExtension = filenameParts[filenameParts.length - 1];
     const tempFileName = `audio-${Date.now()}.${fileExtension}`;
-    console.log(tempFileName);
     await writeFileAsync(tempFileName, file.buffer);
     const openaiClient = new openai.OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const transcription = await openaiClient.audio.transcriptions.create({

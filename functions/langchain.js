@@ -123,11 +123,11 @@ const priorityChain = async (conversation, emails) => {
       chunkOverlap: 250,
     });
     const docsSummary = await splitter.splitDocuments([{ pageContent: conversation, metadata: { loc: null } }]);
-    const SUMMARY_PROMPT = PromptTemplate.fromTemplate(priorityTemplate);
+    const PRIORITY_PROMPT = PromptTemplate.fromTemplate(priorityTemplate);
     const summarizeChain = loadSummarizationChain(model, {
       type: 'refine',
       verbose: false,
-      questionPrompt: SUMMARY_PROMPT,
+      questionPrompt: PRIORITY_PROMPT,
     });
     const inputs = {
       input_documents: docsSummary.map(doc => ({ pageContent: doc.pageContent })),
@@ -136,7 +136,7 @@ const priorityChain = async (conversation, emails) => {
     const summaries = await summarizeChain.call(inputs);
     return summaries.output_text;
   } catch (error) {
-    console.error('Error summarizing conversation:', error);
+    console.error('Error priority conversation:', error);
     throw error;
   }
 };
